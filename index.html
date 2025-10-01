@@ -1,0 +1,1296 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Signer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-red: #dc2626;
+            --primary-red-dark: #b91c1c;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px 0;
+        }
+
+        .header-gradient {
+            background: linear-gradient(135deg, var(--primary-red) 0%, var(--primary-red-dark) 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px 15px 0 0;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3);
+        }
+
+        .main-container {
+            max-width: 420px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            transition: max-width 0.3s ease-in-out;
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+            gap: 10px;
+        }
+
+        .step {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            background: #6b7280;
+            transition: all 0.3s ease;
+        }
+
+        .step.active {
+            background: var(--primary-red);
+            transform: scale(1.1);
+        }
+
+        .step.completed {
+            background: #10b981;
+        }
+
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            margin: 20px;
+            padding: 25px;
+        }
+
+        .btn-primary {
+            background: var(--primary-red);
+            border: none;
+            border-radius: 10px;
+            min-height: 44px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-red-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(220, 38, 38, 0.3);
+        }
+
+        .btn-secondary {
+            border-radius: 10px;
+            min-height: 44px;
+            font-weight: 600;
+        }
+
+        .upload-zone {
+            border: 3px dashed #d1d5db;
+            border-radius: 15px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f9fafb;
+        }
+
+        .upload-zone:hover, .upload-zone.dragover {
+            border-color: var(--primary-red);
+            background: #fef2f2;
+        }
+
+        .signature-canvas {
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            width: 100%;
+            height: 200px;
+            touch-action: none;
+            background: white;
+        }
+
+        .color-picker {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 15px 0;
+        }
+
+        .color-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .color-btn.active {
+            border-color: #374151;
+            transform: scale(1.1);
+        }
+
+        .pdf-container {
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            position: relative;
+            overflow: hidden;
+            background: white;
+            min-height: 500px; /* Domyślna wysokość dla mobile */
+        }
+
+        .pdf-page {
+            width: 100%;
+            cursor: crosshair;
+        }
+
+        .signature-preview {
+            position: absolute;
+            border: 2px dashed #3b82f6;
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 6px;
+            cursor: move;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 15;
+            user-select: none;
+            pointer-events: auto;
+        }
+
+        .resize-handle {
+            position: absolute;
+            bottom: -10px;
+            right: -10px;
+            width: 24px;
+            height: 24px;
+            background: #3b82f6;
+            border-radius: 50%;
+            cursor: se-resize;
+            border: 3px solid white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: white;
+            font-weight: bold;
+        }
+
+        .signature-controls {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            right: 0;
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+            z-index: 20;
+        }
+
+        .signature-btn {
+            background: #10b981;
+            color: white;
+            border: none;
+            border-radius: 15px;
+            padding: 4px 8px;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            transition: all 0.2s;
+        }
+
+        .signature-btn:hover {
+            background: #059669;
+            transform: scale(1.05);
+        }
+
+        .signature-btn.applied {
+            background: #6b7280;
+            cursor: default;
+        }
+
+        .size-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 15px 0;
+        }
+
+        .size-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid #e2e8f0;
+            background: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            font-weight: bold;
+        }
+
+        .size-btn:hover {
+            border-color: #dc2626;
+            background: #fef2f2;
+        }
+
+        .page-navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #f9fafb;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .modal {
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            border-radius: 15px;
+            border: none;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        .step-content {
+            display: none;
+        }
+
+        .step-content.active {
+            display: block;
+        }
+
+        .multi-page-controls {
+            background: #f0f9ff;
+            border: 2px solid #3b82f6;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        .page-status {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            justify-content: center;
+            margin: 10px 0;
+        }
+
+        .page-indicator {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            border: 2px solid #e5e7eb;
+            background: white;
+            transition: all 0.3s ease;
+        }
+
+        .page-indicator.current {
+            border-color: #3b82f6;
+            background: #3b82f6;
+            color: white;
+        }
+
+        .page-indicator.signed {
+            border-color: #10b981;
+            background: #10b981;
+            color: white;
+        }
+
+        @media (max-width: 991px) {
+            .desktop-controls-sidebar { display: none; }
+        }
+        
+        @media (min-width: 768px) {
+            .main-container {
+                max-width: 600px;
+            }
+        }
+        
+        /* NOWE STYLE DLA WERSJI KOMPUTEROWEJ */
+        @media (min-width: 992px) {
+            .main-container {
+                max-width: 1140px;
+            }
+
+            .desktop-layout-step3 {
+                display: flex;
+                gap: 30px;
+                align-items: flex-start;
+            }
+
+            .pdf-column {
+                flex: 3; /* Kolumna z PDF zajmuje 3/4 szerokości */
+            }
+
+            .desktop-controls-sidebar {
+                flex: 1; /* Kolumna z kontrolkami zajmuje 1/4 szerokości */
+                position: sticky;
+                top: 20px;
+            }
+
+            #content-3 .mobile-controls {
+                display: none; /* Ukryj mobilne kontrolki na desktopie */
+            }
+
+            .pdf-container {
+                min-height: 750px; /* Wyższy podgląd na desktopie */
+            }
+        }
+
+        @media (max-width: 576px) {
+            .main-container {
+                margin: 0 10px;
+            }
+            
+            .card {
+                margin: 10px;
+                padding: 20px;
+            }
+            
+            .upload-zone {
+                padding: 30px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="header-gradient">
+            <h1>📝 PDF Signer</h1>
+            <p class="mb-0">Podpisuj dokumenty PDF na komputerze i telefonie</p>
+        </div>
+
+        <div class="step-indicator">
+            <div class="step active" id="step-1">1</div>
+            <div class="step" id="step-2">2</div>
+            <div class="step" id="step-3">3</div>
+            <div class="step" id="step-4">4</div>
+        </div>
+
+        <div class="step-content active" id="content-1">
+            <div class="card">
+                <h3>📁 Krok 1: Wybierz plik PDF</h3>
+                <div class="upload-zone" id="uploadZone">
+                    <h5>Przeciągnij plik PDF tutaj</h5>
+                    <p class="text-muted">lub kliknij aby wybrać plik</p>
+                    <small class="text-muted">Maksymalny rozmiar: 10MB</small>
+                </div>
+                <input type="file" id="fileInput" accept=".pdf" style="display: none;">
+                <div id="fileInfo" class="mt-3" style="display: none;">
+                    <div class="alert alert-success">
+                        <strong>📄 Plik załadowany:</strong> <span id="fileName"></span>
+                    </div>
+                    <button class="btn btn-primary w-100" onclick="nextStep()">
+                        Przejdź do podpisu ➡️
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="step-content" id="content-2">
+            <div class="card">
+                <h3>✍️ Krok 2: Utwórz podpis</h3>
+                <p class="text-muted">Dotknij i rysuj palcem lub myszą</p>
+                
+                <div class="color-picker">
+                    <div class="color-btn active" data-color="#000000" style="background: #000000;"></div>
+                    <div class="color-btn" data-color="#dc2626" style="background: #dc2626;"></div>
+                    <div class="color-btn" data-color="#2563eb" style="background: #2563eb;"></div>
+                    <div class="color-btn" data-color="#16a34a" style="background: #16a34a;"></div>
+                </div>
+
+                <canvas id="signatureCanvas" class="signature-canvas"></canvas>
+                
+                <div class="d-flex gap-2 mt-3">
+                    <button class="btn btn-secondary flex-fill" onclick="clearSignature()">
+                        🗑️ Wyczyść
+                    </button>
+                    <button class="btn btn-primary flex-fill" onclick="nextStep()" id="signatureNext" disabled>
+                        Dalej ➡️
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="step-content" id="content-3">
+            <div class="card">
+                <h3 style="display: flex; align-items: center; gap: 8px;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 11H5a2 2 0 0 0-2 2v3c0 1.1.9 2 2 2h14a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2h-4"/>
+                        <path d="M9 7l3-3 3 3"/>
+                        <path d="M12 2v9"/>
+                    </svg>
+                    Umieść podpis na dokumencie
+                </h3>
+
+                <div class="desktop-layout-step3">
+                    <div class="pdf-column">
+                        <div class="page-navigation">
+                            <button class="btn btn-secondary" onclick="previousPage()" id="prevPageBtn" disabled>
+                                ← Poprzednia
+                            </button>
+                            <span id="pageInfo" style="font-weight: 600; min-width: 100px; text-align: center;">Strona 1 z 1</span>
+                            <button class="btn btn-secondary" onclick="nextPage()" id="nextPageBtn" disabled>
+                                Następna →
+                            </button>
+                        </div>
+                        <div class="pdf-container" id="pdfContainer">
+                            <canvas id="pdfCanvas" class="pdf-page"></canvas>
+                            <div class="signature-preview" id="signaturePreview"></div>
+                        </div>
+                    </div>
+
+                    <div class="desktop-controls-sidebar">
+                        <div class="card p-3">
+                            <h5>Ustawienia podpisu</h5>
+                            <hr>
+                            <strong>Rozmiar</strong>
+                            <div class="size-controls">
+                                <button class="size-btn" onclick="changeSignatureSize(-1)">-</button>
+                                <div class="size-display" id="size-display">Średni</div>
+                                <button class="size-btn" onclick="changeSignatureSize(1)">+</button>
+                            </div>
+                            <hr>
+                            <div class="multi-page-controls" id="multiPageControls" style="display: none; border: none; padding: 0; margin: 0;">
+                                <strong>Status stron</strong>
+                                <div class="page-status" id="pageStatus"></div>
+                                <div class="d-grid gap-2 mt-3">
+                                    <button class="btn btn-primary" onclick="applyToAllPages()" id="applyAllBtn" style="display: none;">
+                                        📄 Dodaj do wszystkich
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mobile-controls">
+                    <div class="size-controls">
+                        <button class="size-btn" onclick="changeSignatureSize(-1)">-</button>
+                        <div class="size-display" id="size-display-mobile">Średni</div>
+                        <button class="size-btn" onclick="changeSignatureSize(1)">+</button>
+                    </div>
+                    <div class="multi-page-controls" id="multiPageControls-mobile" style="display: none;">
+                        <h5>📄 Status stron</h5>
+                        <div class="page-status" id="pageStatus-mobile"></div>
+                        <div class="d-flex gap-2 mt-3">
+                            <button class="btn btn-primary" onclick="applyToAllPages()" id="applyAllBtn-mobile" style="display: none;">
+                                📄 Dodaj do wszystkich stron
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="d-flex gap-2 mt-3">
+                    <button class="btn btn-secondary" onclick="previousStep()">
+                        Wstecz
+                    </button>
+                    <button class="btn btn-primary flex-fill" onclick="nextStep()" id="placementNext" disabled>
+                        Potwierdź i generuj PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="step-content" id="content-4">
+            <div class="card">
+                <h3>✅ Krok 4: Gotowe!</h3>
+                <div id="processingIndicator" class="text-center">
+                    <div class="spinner-border text-danger" role="status">
+                        <span class="visually-hidden">Przetwarzanie...</span>
+                    </div>
+                    <p class="mt-3">Generuję podpisany PDF...</p>
+                </div>
+                
+                <div id="downloadSection" style="display: none;">
+                    <div class="alert alert-success">
+                        <strong>🎉 Sukces!</strong> Twój plik został podpisany.
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-primary" onclick="downloadPdf()">
+                            📥 Pobierz podpisany PDF
+                        </button>
+                        <button class="btn btn-secondary" onclick="sendEmail()">
+                            📧 Wyślij email
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="signAnother()">
+                            🔄 Podpisz kolejny
+                        </button>
+                    </div>
+                    
+                    <div class="mt-3 text-center">
+                        <small class="text-muted">
+                            Możesz też kliknąć na: 
+                            <button onclick="downloadPdf()" id="downloadFileName" class="download-link" style="background: none; border: none; text-decoration: underline;">document_podpisany.pdf</button>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="passwordModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">🔒 Plik chroniony hasłem</h5>
+                </div>
+                <div class="modal-body">
+                    <p>Ten plik PDF jest chroniony hasłem. Wprowadź hasło aby kontynuować:</p>
+                    <input type="password" class="form-control" id="passwordInput" placeholder="Wprowadź hasło...">
+                    <div id="passwordError" class="alert alert-danger mt-2" style="display: none;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
+                    <button type="button" class="btn btn-primary" onclick="unlockPdf()">Odblokuj</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // ... CAŁY KOD JAVASCRIPT POZOSTAJE IDENTYCZNY JAK W POPRZEDNIEJ ODPOWIEDZI ...
+        // ... ZOSTANIE ON TU WKLEJONY ...
+        // Globalne zmienne
+        let currentStep = 1;
+        let pdfFile = null;
+        let pdfDoc = null;
+        let signatureDataUrl = null;
+        let signaturePosition = null;
+        let signatureSize = 15;
+        let signatureSizes = [8, 12, 15, 20, 25, 30, 35];
+        let signatureSizeNames = ['Bardzo mały', 'Mały', 'Średni', 'Duży', 'Bardzo duży', 'Ogromny', 'Maksymalny'];
+        let currentSizeIndex = 2;
+        let currentPage = 1;
+        let totalPages = 1;
+        let isPasswordProtected = false;
+        let originalPassword = null;
+        let unlockedPdfBytes = null;
+        let signaturePositions = {}; 
+        let acceptedPosition = null; 
+        let signedPages = new Set();
+        let canvas = null;
+        let ctx = null;
+        let isDrawing = false;
+        let currentColor = '#000000';
+        let hasSignature = false;
+        let lastPoint = null;
+        const minLineWidth = 0.5;
+        const maxLineWidth = 2.5;
+        const velocityFilterWeight = 0.7;
+        let lastVelocity = 0;
+        let lastWidth = (minLineWidth + maxLineWidth) / 2;
+
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        document.addEventListener('DOMContentLoaded', function() {
+            setupFileUpload();
+            setupSignatureCanvas();
+            setupColorPicker();
+            setupSizeControls();
+        });
+
+        function setupFileUpload() {
+            const uploadZone = document.getElementById('uploadZone');
+            const fileInput = document.getElementById('fileInput');
+            uploadZone.addEventListener('click', () => fileInput.click());
+            uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+            uploadZone.addEventListener('dragleave', () => { uploadZone.classList.remove('dragover'); });
+            uploadZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadZone.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) handleFileSelect(files[0]);
+            });
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) handleFileSelect(e.target.files[0]);
+            });
+        }
+
+        async function handleFileSelect(file) {
+            if (file.type !== 'application/pdf') {
+                alert('❌ Można wybrać tylko pliki PDF!');
+                return;
+            }
+            if (file.size > 10 * 1024 * 1024) {
+                alert('❌ Plik jest za duży! Maksymalny rozmiar to 10MB.');
+                return;
+            }
+            pdfFile = file;
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('fileInfo').style.display = 'block';
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                try {
+                    const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+                    const testDoc = await loadingTask.promise;
+                    isPasswordProtected = false;
+                    pdfDoc = testDoc;
+                    totalPages = pdfDoc.numPages;
+                    currentPage = totalPages > 1 ? totalPages : 1;
+                } catch (pdfError) {
+                    if (pdfError.name === 'PasswordException') {
+                        isPasswordProtected = true;
+                        showPasswordModal();
+                    } else {
+                        console.error('Błąd ładowania PDF:', pdfError);
+                        alert('❌ Błąd podczas ładowania pliku PDF: ' + pdfError.message);
+                    }
+                }
+            } catch (error) {
+                console.error('Nieoczekiwany błąd:', error);
+                alert('❌ Wystąpił nieoczekiwany błąd: ' + error.message);
+            }
+        }
+
+        async function loadPdfDocument(arrayBuffer, password = null) {
+            try {
+                const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer, password: password });
+                pdfDoc = await loadingTask.promise;
+                totalPages = pdfDoc.numPages;
+                currentPage = totalPages > 1 ? totalPages : 1;
+            } catch (error) {
+                if (error.name === 'PasswordException') throw new Error('Błędne hasło');
+                throw error;
+            }
+        }
+
+        function showPasswordModal() {
+            const modal = new bootstrap.Modal(document.getElementById('passwordModal'));
+            modal.show();
+        }
+
+        async function unlockPdf() {
+            const password = document.getElementById('passwordInput').value;
+            const errorDiv = document.getElementById('passwordError');
+            if (!password) {
+                errorDiv.textContent = 'Wprowadź hasło';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            try {
+                const arrayBuffer = await pdfFile.arrayBuffer();
+                await loadPdfDocument(arrayBuffer, password);
+                originalPassword = password;
+                isPasswordProtected = true;
+                const modal = bootstrap.Modal.getInstance(document.getElementById('passwordModal'));
+                modal.hide();
+                document.getElementById('passwordInput').value = '';
+                errorDiv.style.display = 'none';
+            } catch (error) {
+                errorDiv.textContent = error.message;
+                errorDiv.style.display = 'block';
+                console.error('Błąd odblokowania PDF:', error);
+            }
+        }
+
+        function setupSignatureCanvas() {
+            canvas = document.getElementById('signatureCanvas');
+            if (!canvas) return;
+            ctx = canvas.getContext('2d');
+            const cssWidth = canvas.offsetWidth;
+            const cssHeight = canvas.offsetHeight;
+            if (cssWidth === 0 || cssHeight === 0) {
+                console.error("Nie udało się pobrać wymiarów canvasa. Krok 2 może nie działać poprawnie.");
+                return;
+            }
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = cssWidth * dpr;
+            canvas.height = cssHeight * dpr;
+            ctx.scale(dpr, dpr);
+            canvas.style.width = `${cssWidth}px`;
+            canvas.style.height = `${cssHeight}px`;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.strokeStyle = currentColor;
+            canvas.addEventListener('mousedown', startDrawing);
+            canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('mouseup', stopDrawing);
+            canvas.addEventListener('mouseout', stopDrawing);
+            canvas.addEventListener('touchstart', startDrawing, { passive: false });
+            canvas.addEventListener('touchmove', draw, { passive: false });
+            canvas.addEventListener('touchend', stopDrawing, { passive: false });
+        }
+        
+        function getCoords(e) {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            let clientX, clientY;
+            if (e.touches && e.touches.length > 0) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+            return { x: clientX - rect.left, y: clientY - rect.top };
+        }
+
+        function startDrawing(e) {
+            isDrawing = true;
+            const coords = getCoords(e);
+            lastPoint = { x: coords.x, y: coords.y, time: Date.now() };
+            lastVelocity = 0;
+            lastWidth = (minLineWidth + maxLineWidth) / 2;
+            ctx.beginPath();
+            ctx.moveTo(coords.x, coords.y);
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            const coords = getCoords(e);
+            const currentTime = Date.now();
+            const timeDelta = currentTime - lastPoint.time;
+            if (timeDelta < 1) return;
+            const distance = Math.hypot(coords.x - lastPoint.x, coords.y - lastPoint.y);
+            const velocity = distance / timeDelta;
+            const smoothedVelocity = velocityFilterWeight * velocity + (1 - velocityFilterWeight) * lastVelocity;
+            const newWidth = Math.max(maxLineWidth / (smoothedVelocity * 1.5 + 1), minLineWidth);
+            ctx.lineWidth = lastWidth * 0.8 + newWidth * 0.2;
+            const midPoint = { x: (lastPoint.x + coords.x) / 2, y: (lastPoint.y + coords.y) / 2 };
+            ctx.quadraticCurveTo(lastPoint.x, lastPoint.y, midPoint.x, midPoint.y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(midPoint.x, midPoint.y);
+            lastPoint = { x: coords.x, y: coords.y, time: currentTime };
+            lastVelocity = smoothedVelocity;
+            lastWidth = ctx.lineWidth;
+            if (!hasSignature) {
+                hasSignature = true;
+                document.getElementById('signatureNext').disabled = false;
+            }
+        }
+
+        function stopDrawing() {
+            if (isDrawing) { isDrawing = false; lastPoint = null; }
+        }
+
+        function clearSignature() {
+            if (ctx) {
+                const dpr = window.devicePixelRatio || 1;
+                ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
+                hasSignature = false;
+                document.getElementById('signatureNext').disabled = true;
+            }
+        }
+        
+        function trimSignatureCanvas(c) {
+            const ctx = c.getContext('2d');
+            const copy = document.createElement('canvas').getContext('2d');
+            const pixels = ctx.getImageData(0, 0, c.width, c.height);
+            const l = pixels.data.length;
+            let i, x, y, bound = { top: null, left: null, right: null, bottom: null };
+            for (i = 0; i < l; i += 4) {
+                if (pixels.data[i + 3] !== 0) {
+                    x = (i / 4) % c.width;
+                    y = Math.floor((i / 4) / c.width);
+                    if (bound.top === null) bound.top = y;
+                    if (bound.left === null) bound.left = x; else if (x < bound.left) bound.left = x;
+                    if (bound.right === null) bound.right = x; else if (bound.right < x) bound.right = x;
+                    if (bound.bottom === null) bound.bottom = y; else if (bound.bottom < y) bound.bottom = y;
+                }
+            }
+            if (bound.top === null) return c.toDataURL();
+            const padding = 10 * (window.devicePixelRatio || 1);
+            bound.top = Math.max(0, bound.top - padding);
+            bound.left = Math.max(0, bound.left - padding);
+            bound.right = Math.min(c.width, bound.right + padding);
+            bound.bottom = Math.min(c.height, bound.bottom + padding);
+            const trimHeight = bound.bottom - bound.top;
+            const trimWidth = bound.right - bound.left;
+            const trimmedData = ctx.getImageData(bound.left, bound.top, trimWidth, trimHeight);
+            copy.canvas.width = trimWidth;
+            copy.canvas.height = trimHeight;
+            copy.putImageData(trimmedData, 0, 0);
+            return copy.canvas.toDataURL();
+        }
+
+        function setupColorPicker() {
+            const colorBtns = document.querySelectorAll('.color-btn');
+            colorBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    colorBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentColor = btn.getAttribute('data-color');
+                    if (ctx) ctx.strokeStyle = currentColor;
+                });
+            });
+        }
+
+        function setupSizeControls() {
+            currentSizeIndex = 2; // Średni
+            signatureSize = signatureSizes[currentSizeIndex];
+            document.getElementById('size-display').textContent = signatureSizeNames[currentSizeIndex];
+            document.getElementById('size-display-mobile').textContent = signatureSizeNames[currentSizeIndex];
+        }
+
+        function changeSignatureSize(direction) {
+            const newIndex = currentSizeIndex + direction;
+            if (newIndex >= 0 && newIndex < signatureSizes.length) {
+                currentSizeIndex = newIndex;
+                signatureSize = signatureSizes[currentSizeIndex];
+                document.getElementById('size-display').textContent = signatureSizeNames[currentSizeIndex];
+                document.getElementById('size-display-mobile').textContent = signatureSizeNames[currentSizeIndex];
+                const preview = document.getElementById('signaturePreview');
+                if (preview && preview.style.display !== 'none' && preview.querySelector('img')) {
+                    preview.style.width = `${signatureSize}%`;
+                    const img = preview.querySelector('img');
+                    const aspectRatio = img.naturalHeight / img.naturalWidth || 0.6;
+                    preview.style.height = `${signatureSize * aspectRatio}%`;
+                }
+            }
+        }
+
+        async function renderPdfPage() {
+            if (!pdfDoc) return;
+            try {
+                const page = await pdfDoc.getPage(currentPage);
+                const pdfCanvas = document.getElementById('pdfCanvas');
+                const context = pdfCanvas.getContext('2d');
+                const container = document.getElementById('pdfContainer');
+                const containerWidth = container.offsetWidth;
+                const viewport = page.getViewport({ scale: 1 });
+                const scale = (containerWidth / viewport.width);
+                const scaledViewport = page.getViewport({ scale: scale * 2 });
+                pdfCanvas.width = scaledViewport.width;
+                pdfCanvas.height = scaledViewport.height;
+                pdfCanvas.style.width = `${scaledViewport.width / 2}px`;
+                pdfCanvas.style.height = `${scaledViewport.height / 2}px`;
+                await page.render({ canvasContext: context, viewport: scaledViewport }).promise;
+                updatePageNavigation();
+                showSignaturePreview();
+                showMultiPageControls();
+                updatePageStatus();
+                setTimeout(() => loadSignatureForCurrentPage(), 100);
+            } catch (error) {
+                console.error('Błąd renderowania strony PDF:', error);
+                alert('❌ Błąd podczas renderowania strony PDF: ' + error.message);
+            }
+        }
+
+        function updatePageNavigation() {
+            document.getElementById('prevPageBtn').disabled = currentPage <= 1;
+            document.getElementById('nextPageBtn').disabled = currentPage >= totalPages;
+            document.getElementById('pageInfo').textContent = `Strona ${currentPage} z ${totalPages}`;
+        }
+
+        function previousPage() { if (currentPage > 1) { currentPage--; renderPdfPage(); loadSignatureForCurrentPage(); } }
+        function nextPage() { if (currentPage < totalPages) { currentPage++; renderPdfPage(); loadSignatureForCurrentPage(); } }
+
+        function loadSignatureForCurrentPage() {
+            const preview = document.getElementById('signaturePreview');
+            if (!preview.querySelector('img')) return;
+            if (signaturePositions[currentPage]) {
+                const savedPosition = signaturePositions[currentPage];
+                preview.style.left = `${savedPosition.x}%`;
+                preview.style.top = `${savedPosition.y}%`;
+                if (savedPosition.size) {
+                    signatureSize = savedPosition.size;
+                    preview.style.width = `${savedPosition.size}%`;
+                    const aspectRatio = preview.querySelector('img').naturalHeight / preview.querySelector('img').naturalWidth;
+                    preview.style.height = `${savedPosition.size * aspectRatio}%`;
+                    const sizeIndex = signatureSizes.findIndex(size => size >= savedPosition.size);
+                    if (sizeIndex >= 0) {
+                        currentSizeIndex = sizeIndex;
+                        document.getElementById('size-display').textContent = signatureSizeNames[currentSizeIndex];
+                        document.getElementById('size-display-mobile').textContent = signatureSizeNames[currentSizeIndex];
+                    }
+                }
+                signaturePosition = { x: savedPosition.x, y: savedPosition.y, page: currentPage };
+            } else {
+                preview.style.left = '25%';
+                preview.style.top = '25%';
+                preview.style.width = `${signatureSize}%`;
+                const aspectRatio = preview.querySelector('img').naturalHeight / preview.querySelector('img').naturalWidth || 0.6;
+                preview.style.height = `${signatureSize * aspectRatio}%`;
+                signaturePosition = { x: 25, y: 25, page: currentPage };
+            }
+            updateSignatureButtons();
+            updateConfirmButton();
+        }
+
+        function showSignaturePreview() {
+            const preview = document.getElementById('signaturePreview');
+            if (!signatureDataUrl) return;
+            preview.innerHTML = `<div class="signature-controls"><button class="signature-btn" onclick="saveSignaturePosition()" id="saveBtn-${currentPage}">💾 Zapisz</button><button class="signature-btn" onclick="removeSignatureFromPage()" id="removeBtn-${currentPage}" style="display: none; background: #ef4444;">🗑️ Usuń</button></div><img src="${signatureDataUrl}" style="width: 100%; height: 100%; object-fit: contain;" alt="Podpis"><div class="resize-handle">⤢</div>`;
+            const img = preview.querySelector('img');
+            img.onload = () => {
+                const aspectRatio = img.naturalHeight / img.naturalWidth || 0.6;
+                preview.style.width = `${signatureSize}%`;
+                preview.style.height = `${signatureSize * aspectRatio}%`;
+                preview.style.left = '25%';
+                preview.style.top = '25%';
+                preview.style.display = 'flex';
+                signaturePosition = { x: 25, y: 25, page: currentPage };
+            };
+            updateConfirmButton();
+            makeDraggable(preview);
+            makeResizable(preview, preview.querySelector('.resize-handle'));
+            document.getElementById('pdfContainer').addEventListener('click', handlePdfClick);
+            updateSignatureButtons();
+            const saveBtn = document.getElementById(`saveBtn-${currentPage}`);
+            const removeBtn = document.getElementById(`removeBtn-${currentPage}`);
+            if (saveBtn) saveBtn.addEventListener('touchend', (e) => { e.preventDefault(); e.stopPropagation(); saveSignaturePosition(); }, { passive: false });
+            if (removeBtn) removeBtn.addEventListener('touchend', (e) => { e.preventDefault(); e.stopPropagation(); removeSignatureFromPage(); }, { passive: false });
+        }
+
+        function handlePdfClick(e) {
+            if (e.target.id === 'pdfCanvas' || e.target.parentElement.id === 'pdfContainer') {
+                const preview = document.getElementById('signaturePreview');
+                const containerRect = document.getElementById('pdfContainer').getBoundingClientRect();
+                const previewWidth = preview.offsetWidth;
+                const previewHeight = preview.offsetHeight;
+                let x = e.clientX - containerRect.left - (previewWidth / 2);
+                let y = e.clientY - containerRect.top - (previewHeight / 2);
+                let xPercent = (x / containerRect.width) * 100;
+                let yPercent = (y / containerRect.height) * 100;
+                xPercent = Math.max(0, Math.min(xPercent, 100 - (previewWidth / containerRect.width * 100)));
+                yPercent = Math.max(0, Math.min(yPercent, 100 - (previewHeight / containerRect.height * 100)));
+                preview.style.left = `${xPercent}%`;
+                preview.style.top = `${yPercent}%`;
+                signaturePosition.x = xPercent;
+                signaturePosition.y = yPercent;
+            }
+        }
+
+        function showMultiPageControls() {
+            if (totalPages > 1) {
+                document.getElementById('multiPageControls').style.display = 'block';
+                document.getElementById('multiPageControls-mobile').style.display = 'block';
+            }
+        }
+
+        function saveSignaturePosition() {
+            if (!signaturePosition) { alert('Najpierw umieść podpis na stronie!'); return; }
+            signaturePositions[currentPage] = { x: signaturePosition.x, y: signaturePosition.y, page: currentPage, size: signatureSize };
+            signedPages.add(currentPage);
+            acceptedPosition = { x: signaturePosition.x, y: signaturePosition.y, size: signatureSize };
+            updatePageStatus();
+            updateSignatureButtons();
+            updateConfirmButton();
+            if (totalPages > 1) {
+                const applyBtn = document.getElementById('applyAllBtn');
+                const applyBtnMobile = document.getElementById('applyAllBtn-mobile');
+                applyBtn.style.display = 'inline-block';
+                applyBtnMobile.style.display = 'inline-block';
+                if (!applyBtn.hasAttribute('data-mobile-ready')) {
+                    applyBtn.addEventListener('touchend', (e) => { e.preventDefault(); e.stopPropagation(); applyToAllPages(); }, { passive: false });
+                    applyBtnMobile.addEventListener('touchend', (e) => { e.preventDefault(); e.stopPropagation(); applyToAllPages(); }, { passive: false });
+                    applyBtn.setAttribute('data-mobile-ready', 'true');
+                }
+            }
+            alert('✅ Pozycja podpisu została zapisana dla tej strony!');
+        }
+
+        function updateSignatureButtons() {
+            const saveBtn = document.getElementById(`saveBtn-${currentPage}`);
+            const removeBtn = document.getElementById(`removeBtn-${currentPage}`);
+            if (signedPages.has(currentPage)) {
+                if (saveBtn) { saveBtn.textContent = '✅ Zapisano'; saveBtn.classList.add('applied'); saveBtn.onclick = null; }
+                if (removeBtn) removeBtn.style.display = 'inline-block';
+            } else {
+                 if (saveBtn) { saveBtn.textContent = '💾 Zapisz'; saveBtn.classList.remove('applied'); saveBtn.onclick = saveSignaturePosition; }
+                if (removeBtn) removeBtn.style.display = 'none';
+            }
+        }
+
+        function removeSignatureFromPage() {
+            if (!signedPages.has(currentPage)) { alert('Ta strona nie ma zapisanego podpisu!'); return; }
+            delete signaturePositions[currentPage];
+            signedPages.delete(currentPage);
+            updatePageStatus();
+            updateSignatureButtons();
+            updateConfirmButton();
+            alert('🗑️ Podpis został usunięty z tej strony!');
+        }
+
+        function updatePageStatus() {
+            const statusContainers = [document.getElementById('pageStatus'), document.getElementById('pageStatus-mobile')];
+            statusContainers.forEach(container => {
+                if(container) {
+                    container.innerHTML = '';
+                    for (let i = 1; i <= totalPages; i++) {
+                        const indicator = document.createElement('div');
+                        indicator.className = 'page-indicator';
+                        indicator.textContent = i;
+                        if (i === currentPage) indicator.classList.add('current');
+                        if (signedPages.has(i)) indicator.classList.add('signed');
+                        container.appendChild(indicator);
+                    }
+                }
+            });
+        }
+
+        function applyToAllPages() {
+            if (!acceptedPosition) { alert('Najpierw zapisz pozycję podpisu na jakiejś stronie!'); return; }
+            for (let i = 1; i <= totalPages; i++) {
+                signaturePositions[i] = { x: acceptedPosition.x, y: acceptedPosition.y, page: i, size: acceptedPosition.size };
+                signedPages.add(i);
+            }
+            updatePageStatus();
+            updateSignatureButtons();
+            updateConfirmButton();
+            alert(`✅ Podpis został dodany do wszystkich ${totalPages} stron!`);
+        }
+
+        function makeDraggable(element) {
+            let isDragging = false, startX, startY, startLeft, startTop;
+            const handleStart = (e) => {
+                if (e.target.classList.contains('resize-handle')) return;
+                e.preventDefault(); e.stopPropagation(); isDragging = true;
+                const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+                const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+                startX = clientX; startY = clientY; startLeft = element.offsetLeft; startTop = element.offsetTop;
+                element.style.opacity = '0.8'; element.style.transform = 'scale(1.05)'; element.style.zIndex = '20';
+            };
+            const handleMove = (e) => {
+                if (!isDragging) return; e.preventDefault();
+                const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+                const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+                const deltaX = clientX - startX; const deltaY = clientY - startY;
+                const parentRect = element.parentElement.getBoundingClientRect();
+                let newLeft = startLeft + deltaX; let newTop = startTop + deltaY;
+                newLeft = Math.max(0, Math.min(newLeft, parentRect.width - element.offsetWidth));
+                newTop = Math.max(0, Math.min(newTop, parentRect.height - element.offsetHeight));
+                element.style.left = `${newLeft / parentRect.width * 100}%`;
+                element.style.top = `${newTop / parentRect.height * 100}%`;
+            };
+            const handleEnd = () => {
+                if (isDragging) {
+                    isDragging = false; element.style.opacity = '1'; element.style.transform = 'scale(1)'; element.style.zIndex = '15';
+                    const parentRect = element.parentElement.getBoundingClientRect();
+                    signaturePosition.x = (element.offsetLeft / parentRect.width) * 100;
+                    signaturePosition.y = (element.offsetTop / parentRect.height) * 100;
+                    signaturePosition.page = currentPage;
+                }
+            };
+            element.addEventListener('mousedown', handleStart);
+            element.addEventListener('touchstart', handleStart, { passive: false });
+            document.addEventListener('mousemove', handleMove);
+            document.addEventListener('touchmove', handleMove, { passive: false });
+            document.addEventListener('mouseup', handleEnd);
+            document.addEventListener('touchend', handleEnd);
+        }
+
+        function makeResizable(element, handle) {
+            let isResizing = false, startX, startWidth;
+            const handleStart = (e) => {
+                e.preventDefault(); e.stopPropagation(); isResizing = true;
+                startX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+                startWidth = element.offsetWidth;
+                handle.style.background = '#ef4444'; handle.style.transform = 'scale(1.2)';
+            };
+            const handleMove = (e) => {
+                if (!isResizing) return; e.preventDefault();
+                const currentX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+                const deltaX = currentX - startX;
+                const parentRect = element.parentElement.getBoundingClientRect();
+                const newWidth = startWidth + deltaX;
+                const newWidthPercent = (newWidth / parentRect.width) * 100;
+                if (newWidthPercent > 5 && newWidthPercent < 95 && element.querySelector('img')) {
+                    element.style.width = `${newWidthPercent}%`;
+                    const img = element.querySelector('img');
+                    const aspectRatio = img.naturalHeight / img.naturalWidth || 0.6;
+                    element.style.height = `${newWidthPercent * aspectRatio}%`;
+                    const closestSize = signatureSizes.reduce((p, c) => Math.abs(c - newWidthPercent) < Math.abs(p - newWidthPercent) ? c : p);
+                    const sizeIndex = signatureSizes.indexOf(closestSize);
+                    if (sizeIndex !== -1) {
+                         currentSizeIndex = sizeIndex;
+                         document.getElementById('size-display').textContent = signatureSizeNames[sizeIndex];
+                         document.getElementById('size-display-mobile').textContent = signatureSizeNames[sizeIndex];
+                    }
+                }
+            };
+            const handleEnd = () => {
+                if (isResizing) {
+                    isResizing = false; handle.style.background = '#3b82f6'; handle.style.transform = 'scale(1)';
+                    const parentRect = element.parentElement.getBoundingClientRect();
+                    signatureSize = (element.offsetWidth / parentRect.width) * 100;
+                    if (signaturePosition) signaturePosition.size = signatureSize;
+                }
+            };
+            handle.addEventListener('mousedown', handleStart);
+            handle.addEventListener('touchstart', handleStart, { passive: false });
+            document.addEventListener('mousemove', handleMove);
+            document.addEventListener('touchmove', handleMove, { passive: false });
+            document.addEventListener('mouseup', handleEnd);
+            document.addEventListener('touchend', handleEnd);
+        }
+
+        function nextStep() {
+            if (currentStep < 4) {
+                document.getElementById(`content-${currentStep}`).classList.remove('active');
+                document.getElementById(`step-${currentStep}`).classList.remove('active');
+                document.getElementById(`step-${currentStep}`).classList.add('completed');
+                currentStep++;
+                document.getElementById(`content-${currentStep}`).classList.add('active');
+                document.getElementById(`step-${currentStep}`).classList.add('active');
+                if (currentStep === 2) setupSignatureCanvas();
+                else if (currentStep === 3) { signatureDataUrl = trimSignatureCanvas(canvas); renderPdfPage(); } 
+                else if (currentStep === 4) {
+                    if (signedPages.size === 0) {
+                        alert('❌ Najpierw zapisz podpis na przynajmniej jednej stronie!');
+                        currentStep--;
+                        document.getElementById(`content-${currentStep + 1}`).classList.remove('active');
+                        document.getElementById(`step-${currentStep + 1}`).classList.remove('active');
+                        document.getElementById(`content-${currentStep}`).classList.add('active');
+                        document.getElementById(`step-${currentStep}`).classList.add('active');
+                        document.getElementById(`step-${currentStep}`).classList.remove('completed');
+                        return;
+                    }
+                    document.getElementById('processingIndicator').style.display = 'block';
+                    document.getElementById('downloadSection').style.display = 'none';
+                    generateSignedPdf();
+                }
+            }
+        }
+
+        function previousStep() {
+            if (currentStep > 1) {
+                document.getElementById(`content-${currentStep}`).classList.remove('active');
+                document.getElementById(`step-${currentStep}`).classList.remove('active');
+                document.getElementById(`step-${currentStep-1}`).classList.remove('completed');
+                currentStep--;
+                document.getElementById(`content-${currentStep}`).classList.add('active');
+                document.getElementById(`step-${currentStep}`).classList.add('active');
+            }
+        }
+        
+        function dataURLToArrayBuffer(dataUrl) {
+            const base64 = dataUrl.split(',')[1];
+            const binaryString = atob(base64);
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) bytes[i] = binaryString.charCodeAt(i);
+            return bytes.buffer;
+        }
+
+        async function generateSignedPdf() {
+            try {
+                if (!signatureDataUrl) throw new Error('Brak danych podpisu. Narysuj podpis ponownie.');
+                const finalPdfDoc = await PDFLib.PDFDocument.create();
+                const signatureImage = await finalPdfDoc.embedPng(signatureDataUrl);
+                for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
+                    const page = await pdfDoc.getPage(pageNum);
+                    const viewport = page.getViewport({ scale: 2.0 });
+                    const tempCanvas = document.createElement('canvas');
+                    tempCanvas.width = viewport.width; tempCanvas.height = viewport.height;
+                    const tempCtx = tempCanvas.getContext('2d');
+                    await page.render({ canvasContext: tempCtx, viewport: viewport }).promise;
+                    const pageImageBytes = dataURLToArrayBuffer(tempCanvas.toDataURL('image/jpeg', 0.92));
+                    const pageImage = await finalPdfDoc.embedJpg(pageImageBytes);
+                    const { width, height } = pageImage.scale(1);
+                    const pdfPage = finalPdfDoc.addPage([width, height]);
+                    pdfPage.drawImage(pageImage, { x: 0, y: 0, width: width, height: height });
+                    if (signedPages.has(pageNum)) {
+                        const position = signaturePositions[pageNum];
+                        if (position) {
+                            const signatureDims = signatureImage.scale(1);
+                            const signatureWidth = (position.size / 100) * width;
+                            const signatureHeight = (signatureWidth / signatureDims.width) * signatureDims.height;
+                            const x = (position.x / 100) * width;
+                            const y = height - (position.y / 100) * height - signatureHeight - 10;
+                            pdfPage.drawImage(signatureImage, { x, y, width: signatureWidth, height: signatureHeight });
+                        }
+                    }
+                }
+                const pdfBytes = await finalPdfDoc.save();
+                const originalName = pdfFile.name.replace(/\.pdf$/i, '');
+                const signedName = `${originalName}_podpisany.pdf`;
+                const signedBlob = new Blob([pdfBytes], { type: 'application/pdf' });
+                window.signedPdfBlob = signedBlob;
+                window.signedPdfName = signedName;
+                document.getElementById('processingIndicator').style.display = 'none';
+                showDownloadButtons(signedName);
+            } catch (error) {
+                console.error('Błąd generowania PDF:', error);
+                alert('❌ Wystąpił błąd podczas generowania pliku PDF: ' + error.message);
+                previousStep(); 
+            }
+        }
+
+        function showDownloadButtons(fileName) {
+            document.getElementById('downloadSection').style.display = 'block';
+            const fileNameElement = document.getElementById('downloadFileName');
+            if (fileNameElement) fileNameElement.textContent = fileName;
+        }
+        
+        function downloadPdf() {
+            if (!window.signedPdfBlob) { alert("Proszę czekać, PDF jest wciąż generowany lub wystąpił błąd."); return; }
+            try {
+                const url = URL.createObjectURL(window.signedPdfBlob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = window.signedPdfName;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+            } catch (error) {
+                console.error('Błąd pobierania:', error);
+            }
+        }
+        
+        function sendEmail() {
+            const fileName = window.signedPdfName || (pdfFile ? pdfFile.name.replace('.pdf', '_podpisany.pdf') : 'podpisany.pdf');
+            const subject = encodeURIComponent('Podpisany dokument PDF');
+            const body = encodeURIComponent(`Załączam podpisany dokument: ${fileName}\n\nDokument został podpisany za pomocą aplikacji PDF Signer.`);
+            if (navigator.share && window.signedPdfBlob) {
+                navigator.share({
+                    title: 'Podpisany dokument PDF',
+                    text: 'Przesyłam podpisany dokument PDF',
+                    files: [new File([window.signedPdfBlob], fileName, { type: 'application/pdf' })]
+                }).catch( (error) => {
+                    console.warn("Udostępnianie przez Web Share API nie powiodło się, powrót do mailto:", error);
+                    window.location.href = `mailto:?subject=${subject}&body=${body}`;
+                });
+            } else {
+                 window.location.href = `mailto:?subject=${subject}&body=${body}`;
+            }
+        }
+        
+        function signAnother() { window.location.reload(); }
+
+        function updateConfirmButton() {
+            const confirmBtn = document.getElementById('placementNext');
+            if (confirmBtn) {
+                confirmBtn.disabled = signedPages.size === 0;
+                if (!confirmBtn.hasAttribute('data-mobile-ready')) {
+                    confirmBtn.addEventListener('touchend', (e) => {
+                        if (!confirmBtn.disabled) { e.preventDefault(); e.stopPropagation(); nextStep(); }
+                    }, { passive: false });
+                    confirmBtn.setAttribute('data-mobile-ready', 'true');
+                }
+            }
+        }
+
+        document.getElementById('passwordInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') unlockPdf(); });
+    </script>
+</body>
+</html>
