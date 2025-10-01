@@ -582,11 +582,10 @@
         let pdfDoc = null;
         let signatureDataUrl = null;
         let signaturePosition = null;
-        // ✅ ZMIANA DOMYŚLNEGO ROZMIARU
-        let signatureSize = 20; // Było 15
+        let signatureSize = 20;
         let signatureSizes = [8, 12, 15, 20, 25, 30, 35];
         let signatureSizeNames = ['Bardzo mały', 'Mały', 'Średni', 'Duży', 'Bardzo duży', 'Ogromny', 'Maksymalny'];
-        let currentSizeIndex = 3; // Było 2
+        let currentSizeIndex = 3;
         let currentPage = 1;
         let totalPages = 1;
         let isPasswordProtected = false;
@@ -601,8 +600,11 @@
         let currentColor = '#000000';
         let hasSignature = false;
         let lastPoint = null;
-        const minLineWidth = 0.5;
-        const maxLineWidth = 2.5;
+        
+        // ✅ ZMIANA: GRUBSZY PODPIS
+        const minLineWidth = 1.2; // Było 0.5
+        const maxLineWidth = 3.5; // Było 2.5
+
         const velocityFilterWeight = 0.7;
         let lastVelocity = 0;
         let lastWidth = (minLineWidth + maxLineWidth) / 2;
@@ -844,7 +846,6 @@
         }
 
         function setupSizeControls() {
-            // Użyj wartości z globalnych zmiennych
             signatureSize = signatureSizes[currentSizeIndex];
             document.getElementById('size-display').textContent = signatureSizeNames[currentSizeIndex];
             document.getElementById('size-display-mobile').textContent = signatureSizeNames[currentSizeIndex];
