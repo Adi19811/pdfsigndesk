@@ -576,8 +576,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // ... CAŁY KOD JAVASCRIPT POZOSTAJE IDENTYCZNY JAK W POPRZEDNIEJ ODPOWIEDZI ...
-        // ... ZOSTANIE ON TU WKLEJONY ...
         // Globalne zmienne
         let currentStep = 1;
         let pdfFile = null;
@@ -1212,10 +1210,15 @@
                         const position = signaturePositions[pageNum];
                         if (position) {
                             const signatureDims = signatureImage.scale(1);
-                            const signatureWidth = (position.size / 100) * width;
+
+                            // ✅ ZMIANA 1: PODPIS JEST O 15% WIĘKSZY
+                            const signatureWidth = ((position.size / 100) * width) * 1.15;
                             const signatureHeight = (signatureWidth / signatureDims.width) * signatureDims.height;
                             const x = (position.x / 100) * width;
-                            const y = height - (position.y / 100) * height - signatureHeight - 10;
+                            
+                            // ✅ ZMIANA 2: PODPIS JEST O 15 PKT WYŻEJ NIŻ OSTATNIO (-35 + 15 = -20)
+                            const y = height - (position.y / 100) * height - signatureHeight - 20;
+                            
                             pdfPage.drawImage(signatureImage, { x, y, width: signatureWidth, height: signatureHeight });
                         }
                     }
