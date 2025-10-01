@@ -582,10 +582,11 @@
         let pdfDoc = null;
         let signatureDataUrl = null;
         let signaturePosition = null;
-        let signatureSize = 15;
+        // ✅ ZMIANA DOMYŚLNEGO ROZMIARU
+        let signatureSize = 20; // Było 15
         let signatureSizes = [8, 12, 15, 20, 25, 30, 35];
         let signatureSizeNames = ['Bardzo mały', 'Mały', 'Średni', 'Duży', 'Bardzo duży', 'Ogromny', 'Maksymalny'];
-        let currentSizeIndex = 2;
+        let currentSizeIndex = 3; // Było 2
         let currentPage = 1;
         let totalPages = 1;
         let isPasswordProtected = false;
@@ -843,7 +844,7 @@
         }
 
         function setupSizeControls() {
-            currentSizeIndex = 2; // Średni
+            // Użyj wartości z globalnych zmiennych
             signatureSize = signatureSizes[currentSizeIndex];
             document.getElementById('size-display').textContent = signatureSizeNames[currentSizeIndex];
             document.getElementById('size-display-mobile').textContent = signatureSizeNames[currentSizeIndex];
@@ -1210,13 +1211,9 @@
                         const position = signaturePositions[pageNum];
                         if (position) {
                             const signatureDims = signatureImage.scale(1);
-
-                            // ✅ ZMIANA 1: PODPIS JEST O 15% WIĘKSZY
                             const signatureWidth = ((position.size / 100) * width) * 1.15;
                             const signatureHeight = (signatureWidth / signatureDims.width) * signatureDims.height;
                             const x = (position.x / 100) * width;
-                            
-                            // ✅ ZMIANA 2: PODPIS JEST O 15 PKT WYŻEJ NIŻ OSTATNIO (-35 + 15 = -20)
                             const y = height - (position.y / 100) * height - signatureHeight - 20;
                             
                             pdfPage.drawImage(signatureImage, { x, y, width: signatureWidth, height: signatureHeight });
