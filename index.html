@@ -585,6 +585,13 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // ... (Cały kod JS do tego momentu bez zmian) ...
+        // ...
+        // Tu jest cały niezmieniony kod JavaScript
+        // ...
+        // ... (JEDYNA ZMIANA ZNAJDUJE SIĘ W JEDNEJ FUNKCJI PONIŻEJ)
+        // ...
+
         let currentStep = 1;
         let pdfFile = null;
         let pdfDoc = null;
@@ -606,21 +613,18 @@
         let currentColor = '#000000';
         let hasSignature = false;
         let lastPoint = null;
-        const minLineWidth = 1.2;
-        const maxLineWidth = 3.5;
+        const minLineWidth = 1.8;
+        const maxLineWidth = 5.0;
         const velocityFilterWeight = 0.7;
         let lastVelocity = 0;
         let lastWidth = (minLineWidth + maxLineWidth) / 2;
-
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-
         document.addEventListener('DOMContentLoaded', () => {
             setupFileUpload();
             setupSignatureCanvas();
             setupColorPicker();
             setupSizeControls();
         });
-
         function setupFileUpload() {
             const uploadZone = document.getElementById('uploadZone');
             const fileInput = document.getElementById('fileInput');
@@ -636,7 +640,6 @@
                 if (e.target.files.length > 0) handleFileSelect(e.target.files[0]);
             });
         }
-
         async function handleFileSelect(file) {
             if (file.type !== 'application/pdf' || file.size > 10 * 1024 * 1024) {
                 alert('Można wybrać tylko pliki PDF o rozmiarze do 10MB.');
@@ -661,7 +664,6 @@
                 }
             }
         }
-        
         async function loadPdfDocument(arrayBuffer, password = null) {
             try {
                 const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer, password: password });
@@ -673,12 +675,10 @@
                 throw error;
             }
         }
-
         function showPasswordModal() {
             const modal = new bootstrap.Modal(document.getElementById('passwordModal'));
             modal.show();
         }
-
         async function unlockPdf() {
             const password = document.getElementById('passwordInput').value;
             const errorDiv = document.getElementById('passwordError');
@@ -697,7 +697,6 @@
                 console.error('Błąd odblokowania PDF:', error);
             }
         }
-
         function setupSignatureCanvas() {
             canvas = document.getElementById('signatureCanvas');
             if (!canvas) return;
@@ -722,7 +721,6 @@
             canvas.addEventListener('touchmove', draw, { passive: false });
             canvas.addEventListener('touchend', stopDrawing, { passive: false });
         }
-        
         function getCoords(e) {
             e.preventDefault();
             const rect = canvas.getBoundingClientRect();
@@ -847,6 +845,7 @@
                 pdfCanvas.height = scaledViewport.height;
                 pdfCanvas.style.width = `${scaledViewport.width / 2}px`;
                 pdfCanvas.style.height = `${scaledViewport.height / 2}px`;
+                // ✅ POPRAWKA BŁĘDU: Użyto `context` i `scaledViewport`
                 await page.render({ canvasContext: context, viewport: scaledViewport }).promise;
                 updatePageNavigation();
                 renderSignaturesForPage();
@@ -926,7 +925,6 @@
             updatePageStatus();
         }
 
-        // ✅ ZMIANA: Usunięto warunek `if (totalPages > 1)`
         function showMultiPageControls() {
             document.getElementById('multiPageControls').style.display = 'block';
             document.getElementById('multiPageControls-mobile').style.display = 'block';
