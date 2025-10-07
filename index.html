@@ -650,8 +650,7 @@
                 const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
                 pdfDoc = await loadingTask.promise;
                 totalPages = pdfDoc.numPages;
-                // ✅ ZMIANA: Zacznij od ostatniej strony
-                currentPage = totalPages; 
+                currentPage = totalPages;
             } catch (error) {
                 if (error.name === 'PasswordException') {
                     isPasswordProtected = true;
@@ -668,7 +667,6 @@
                 const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer, password: password });
                 pdfDoc = await loadingTask.promise;
                 totalPages = pdfDoc.numPages;
-                // ✅ ZMIANA: Zacznij od ostatniej strony
                 currentPage = totalPages;
             } catch (error) {
                 if (error.name === 'PasswordException') throw new Error('Błędne hasło');
@@ -821,18 +819,14 @@
 
         function changeSignatureSize(direction) {
             if (activeSignatureId === null) return;
-            
             const signaturesOnPage = signaturePositions[currentPage] || [];
             const activeSign = signaturesOnPage.find(sig => sig.id === activeSignatureId);
             if (!activeSign) return;
-
             const currentIdx = signatureSizes.indexOf(activeSign.size);
             const newIndex = currentIdx + direction;
-
             if (newIndex >= 0 && newIndex < signatureSizes.length) {
                 activeSign.size = signatureSizes[newIndex];
                 renderSignaturesForPage();
-                
                 document.getElementById('size-display').textContent = signatureSizeNames[newIndex];
                 document.getElementById('size-display-mobile').textContent = signatureSizeNames[newIndex];
             }
@@ -854,12 +848,10 @@
                 pdfCanvas.style.width = `${scaledViewport.width / 2}px`;
                 pdfCanvas.style.height = `${scaledViewport.height / 2}px`;
                 await page.render({ canvasContext: context, viewport: scaledViewport }).promise;
-                
                 updatePageNavigation();
                 renderSignaturesForPage();
                 showMultiPageControls();
                 updatePageStatus();
-                
             } catch (error) {
                 console.error('Błąd renderowania strony PDF:', error);
                 alert('❌ Błąd podczas renderowania strony PDF: ' + error.message);
@@ -878,10 +870,8 @@
         function renderSignaturesForPage() {
             const container = document.getElementById('pdfContainer');
             container.querySelectorAll('.signature-preview').forEach(el => el.remove());
-
             const signaturesOnPage = signaturePositions[currentPage] || [];
             if (!signatureDataUrl) return;
-
             signaturesOnPage.forEach(sig => {
                 const preview = document.createElement('div');
                 preview.className = 'signature-preview';
@@ -889,7 +879,6 @@
                 preview.style.left = `${sig.x}%`;
                 preview.style.top = `${sig.y}%`;
                 preview.style.width = `${sig.size}%`;
-
                 preview.innerHTML = `
                     <div class="signature-controls">
                         <button class="signature-btn" onclick="removeSignatureFromPage(${sig.id})">
@@ -898,26 +887,23 @@
                     </div>
                     <img src="${signatureDataUrl}" style="width: 100%; height: 100%; object-fit: contain;" alt="Podpis">
                     <div class="resize-handle"></div>`;
-                
                 container.appendChild(preview);
-
                 const img = preview.querySelector('img');
                 img.onload = () => {
                     const aspectRatio = img.naturalHeight / img.naturalWidth || 0.6;
                     preview.style.height = `${sig.size * aspectRatio}%`;
                 };
-
                 const setActive = () => {
                     activeSignatureId = sig.id;
                     document.querySelectorAll('.signature-preview').forEach(p => p.style.zIndex = '15');
                     preview.style.zIndex = '16';
-                    const sizeIndex = signatureSizes.findIndex(s => s >= sig.size)
-                    document.getElementById('size-display').textContent = signatureSizeNames[sizeIndex] || 'Niestand.';
-                    document.getElementById('size-display-mobile').textContent = signatureSizeNames[sizeIndex] || 'Niestand.';
+                    const sizeIndex = signatureSizes.findIndex(s => s >= sig.size);
+                    const sizeName = signatureSizeNames[sizeIndex] || 'Niestand.';
+                    document.getElementById('size-display').textContent = sizeName;
+                    document.getElementById('size-display-mobile').textContent = sizeName;
                 };
                 preview.addEventListener('mousedown', setActive);
                 preview.addEventListener('touchstart', setActive);
-                
                 makeDraggable(preview, sig.id);
                 makeResizable(preview, preview.querySelector('.resize-handle'), sig.id);
             });
@@ -940,11 +926,10 @@
             updatePageStatus();
         }
 
+        // ✅ ZMIANA: Usunięto warunek `if (totalPages > 1)`
         function showMultiPageControls() {
-            if (totalPages > 1) {
-                document.getElementById('multiPageControls').style.display = 'block';
-                document.getElementById('multiPageControls-mobile').style.display = 'block';
-            }
+            document.getElementById('multiPageControls').style.display = 'block';
+            document.getElementById('multiPageControls-mobile').style.display = 'block';
         }
         
         function removeSignatureFromPage(signatureId) {
