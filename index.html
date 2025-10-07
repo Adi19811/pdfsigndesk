@@ -98,6 +98,14 @@
             font-weight: 600;
         }
 
+        .btn-success {
+            border-radius: 10px;
+            min-height: 44px;
+            font-weight: 600;
+            background-color: #198754;
+            border-color: #198754;
+        }
+
         .upload-zone {
             border: 3px dashed #d1d5db;
             border-radius: 15px;
@@ -149,7 +157,7 @@
             position: relative;
             overflow: hidden;
             background: white;
-            min-height: 500px; /* Domyślna wysokość dla mobile */
+            min-height: 500px;
         }
 
         .pdf-page {
@@ -192,9 +200,8 @@
 
         .signature-controls {
             position: absolute;
-            top: -40px;
-            left: 0;
-            right: 0;
+            top: -35px;
+            right: 5px;
             display: flex;
             gap: 5px;
             justify-content: center;
@@ -202,26 +209,25 @@
         }
 
         .signature-btn {
-            background: #10b981;
+            background: #ef4444;
             color: white;
             border: none;
-            border-radius: 15px;
-            padding: 4px 8px;
-            font-size: 11px;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            font-size: 14px;
             font-weight: bold;
             cursor: pointer;
             box-shadow: 0 2px 8px rgba(0,0,0,0.3);
             transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .signature-btn:hover {
-            background: #059669;
-            transform: scale(1.05);
-        }
-
-        .signature-btn.applied {
-            background: #6b7280;
-            cursor: default;
+            background: #dc2626;
+            transform: scale(1.1);
         }
 
         .size-controls {
@@ -330,7 +336,6 @@
             }
         }
         
-        /* NOWE STYLE DLA WERSJI KOMPUTEROWEJ */
         @media (min-width: 992px) {
             .main-container {
                 max-width: 1140px;
@@ -343,21 +348,21 @@
             }
 
             .pdf-column {
-                flex: 3; /* Kolumna z PDF zajmuje 3/4 szerokości */
+                flex: 3;
             }
 
             .desktop-controls-sidebar {
-                flex: 1; /* Kolumna z kontrolkami zajmuje 1/4 szerokości */
+                flex: 1;
                 position: sticky;
                 top: 20px;
             }
 
             #content-3 .mobile-controls {
-                display: none; /* Ukryj mobilne kontrolki na desktopie */
+                display: none;
             }
 
             .pdf-container {
-                min-height: 750px; /* Wyższy podgląd na desktopie */
+                min-height: 750px;
             }
         }
 
@@ -460,7 +465,6 @@
                         </div>
                         <div class="pdf-container" id="pdfContainer">
                             <canvas id="pdfCanvas" class="pdf-page"></canvas>
-                            <div class="signature-preview" id="signaturePreview"></div>
                         </div>
                     </div>
 
@@ -479,8 +483,8 @@
                                 <strong>Status stron</strong>
                                 <div class="page-status" id="pageStatus"></div>
                                 <div class="d-grid gap-2 mt-3">
-                                    <button class="btn btn-primary" onclick="applyToAllPages()" id="applyAllBtn" style="display: none;">
-                                        📄 Dodaj do wszystkich
+                                    <button class="btn btn-primary" onclick="addAnotherSignature()">
+                                        ➕ Dodaj kolejny podpis
                                     </button>
                                 </div>
                             </div>
@@ -498,13 +502,12 @@
                         <h5>📄 Status stron</h5>
                         <div class="page-status" id="pageStatus-mobile"></div>
                         <div class="d-flex gap-2 mt-3">
-                            <button class="btn btn-primary" onclick="applyToAllPages()" id="applyAllBtn-mobile" style="display: none;">
-                                📄 Dodaj do wszystkich stron
+                           <button class="btn btn-primary" onclick="addAnotherSignature()">
+                                ➕ Dodaj kolejny podpis
                             </button>
                         </div>
                     </div>
                 </div>
-
 
                 <div class="d-flex gap-2 mt-3">
                     <button class="btn btn-secondary" onclick="previousStep()">
@@ -536,8 +539,14 @@
                         <button class="btn btn-primary" onclick="downloadPdf()">
                             📥 Pobierz podpisany PDF
                         </button>
+                        <button class="btn btn-success" onclick="sendWhatsApp()">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-whatsapp" viewBox="0 0 16 16" style="vertical-align: -2px; margin-right: 4px;">
+                                <path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/>
+                            </svg>
+                            Wyślij przez WhatsApp
+                        </button>
                         <button class="btn btn-secondary" onclick="sendEmail()">
-                            📧 Wyślij email
+                            📧 Wyślij email (załącz plik z umową ręcznie)
                         </button>
                         <button class="btn btn-outline-secondary" onclick="signAnother()">
                             🔄 Podpisz kolejny
@@ -576,12 +585,13 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Globalne zmienne
         let currentStep = 1;
         let pdfFile = null;
         let pdfDoc = null;
         let signatureDataUrl = null;
-        let signaturePosition = null;
+        let signaturePositions = {};
+        let nextSignatureId = 1;
+        let activeSignatureId = null;
         let signatureSize = 20;
         let signatureSizes = [8, 12, 15, 20, 25, 30, 35];
         let signatureSizeNames = ['Bardzo mały', 'Mały', 'Średni', 'Duży', 'Bardzo duży', 'Ogromny', 'Maksymalny'];
@@ -590,28 +600,21 @@
         let totalPages = 1;
         let isPasswordProtected = false;
         let originalPassword = null;
-        let unlockedPdfBytes = null;
-        let signaturePositions = {}; 
-        let acceptedPosition = null; 
-        let signedPages = new Set();
         let canvas = null;
         let ctx = null;
         let isDrawing = false;
         let currentColor = '#000000';
         let hasSignature = false;
         let lastPoint = null;
-        
-        // ✅ ZMIANA: GRUBSZY PODPIS
-        const minLineWidth = 1.2; // Było 0.5
-        const maxLineWidth = 3.5; // Było 2.5
-
+        const minLineWidth = 1.2;
+        const maxLineWidth = 3.5;
         const velocityFilterWeight = 0.7;
         let lastVelocity = 0;
         let lastWidth = (minLineWidth + maxLineWidth) / 2;
 
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', () => {
             setupFileUpload();
             setupSignatureCanvas();
             setupColorPicker();
@@ -627,8 +630,7 @@
             uploadZone.addEventListener('drop', (e) => {
                 e.preventDefault();
                 uploadZone.classList.remove('dragover');
-                const files = e.dataTransfer.files;
-                if (files.length > 0) handleFileSelect(files[0]);
+                if (e.dataTransfer.files.length > 0) handleFileSelect(e.dataTransfer.files[0]);
             });
             fileInput.addEventListener('change', (e) => {
                 if (e.target.files.length > 0) handleFileSelect(e.target.files[0]);
@@ -636,12 +638,8 @@
         }
 
         async function handleFileSelect(file) {
-            if (file.type !== 'application/pdf') {
-                alert('❌ Można wybrać tylko pliki PDF!');
-                return;
-            }
-            if (file.size > 10 * 1024 * 1024) {
-                alert('❌ Plik jest za duży! Maksymalny rozmiar to 10MB.');
+            if (file.type !== 'application/pdf' || file.size > 10 * 1024 * 1024) {
+                alert('Można wybrać tylko pliki PDF o rozmiarze do 10MB.');
                 return;
             }
             pdfFile = file;
@@ -649,34 +647,29 @@
             document.getElementById('fileInfo').style.display = 'block';
             try {
                 const arrayBuffer = await file.arrayBuffer();
-                try {
-                    const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
-                    const testDoc = await loadingTask.promise;
-                    isPasswordProtected = false;
-                    pdfDoc = testDoc;
-                    totalPages = pdfDoc.numPages;
-                    currentPage = totalPages > 1 ? totalPages : 1;
-                } catch (pdfError) {
-                    if (pdfError.name === 'PasswordException') {
-                        isPasswordProtected = true;
-                        showPasswordModal();
-                    } else {
-                        console.error('Błąd ładowania PDF:', pdfError);
-                        alert('❌ Błąd podczas ładowania pliku PDF: ' + pdfError.message);
-                    }
-                }
+                const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+                pdfDoc = await loadingTask.promise;
+                totalPages = pdfDoc.numPages;
+                // ✅ ZMIANA: Zacznij od ostatniej strony
+                currentPage = totalPages; 
             } catch (error) {
-                console.error('Nieoczekiwany błąd:', error);
-                alert('❌ Wystąpił nieoczekiwany błąd: ' + error.message);
+                if (error.name === 'PasswordException') {
+                    isPasswordProtected = true;
+                    showPasswordModal();
+                } else {
+                    console.error('Błąd ładowania PDF:', error);
+                    alert('Błąd podczas ładowania pliku PDF: ' + error.message);
+                }
             }
         }
-
+        
         async function loadPdfDocument(arrayBuffer, password = null) {
             try {
                 const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer, password: password });
                 pdfDoc = await loadingTask.promise;
                 totalPages = pdfDoc.numPages;
-                currentPage = totalPages > 1 ? totalPages : 1;
+                // ✅ ZMIANA: Zacznij od ostatniej strony
+                currentPage = totalPages;
             } catch (error) {
                 if (error.name === 'PasswordException') throw new Error('Błędne hasło');
                 throw error;
@@ -691,18 +684,13 @@
         async function unlockPdf() {
             const password = document.getElementById('passwordInput').value;
             const errorDiv = document.getElementById('passwordError');
-            if (!password) {
-                errorDiv.textContent = 'Wprowadź hasło';
-                errorDiv.style.display = 'block';
-                return;
-            }
+            if (!password) { errorDiv.textContent = 'Wprowadź hasło'; errorDiv.style.display = 'block'; return; }
             try {
                 const arrayBuffer = await pdfFile.arrayBuffer();
                 await loadPdfDocument(arrayBuffer, password);
                 originalPassword = password;
                 isPasswordProtected = true;
-                const modal = bootstrap.Modal.getInstance(document.getElementById('passwordModal'));
-                modal.hide();
+                bootstrap.Modal.getInstance(document.getElementById('passwordModal')).hide();
                 document.getElementById('passwordInput').value = '';
                 errorDiv.style.display = 'none';
             } catch (error) {
@@ -718,10 +706,7 @@
             ctx = canvas.getContext('2d');
             const cssWidth = canvas.offsetWidth;
             const cssHeight = canvas.offsetHeight;
-            if (cssWidth === 0 || cssHeight === 0) {
-                console.error("Nie udało się pobrać wymiarów canvasa. Krok 2 może nie działać poprawnie.");
-                return;
-            }
+            if (cssWidth === 0 || cssHeight === 0) { console.error("Canvas has zero size."); return; }
             const dpr = window.devicePixelRatio || 1;
             canvas.width = cssWidth * dpr;
             canvas.height = cssHeight * dpr;
@@ -744,16 +729,10 @@
             e.preventDefault();
             const rect = canvas.getBoundingClientRect();
             let clientX, clientY;
-            if (e.touches && e.touches.length > 0) {
-                clientX = e.touches[0].clientX;
-                clientY = e.touches[0].clientY;
-            } else {
-                clientX = e.clientX;
-                clientY = e.clientY;
-            }
+            if (e.touches && e.touches.length > 0) { clientX = e.touches[0].clientX; clientY = e.touches[0].clientY; } 
+            else { clientX = e.clientX; clientY = e.clientY; }
             return { x: clientX - rect.left, y: clientY - rect.top };
         }
-
         function startDrawing(e) {
             isDrawing = true;
             const coords = getCoords(e);
@@ -763,7 +742,6 @@
             ctx.beginPath();
             ctx.moveTo(coords.x, coords.y);
         }
-
         function draw(e) {
             if (!isDrawing) return;
             const coords = getCoords(e);
@@ -783,16 +761,9 @@
             lastPoint = { x: coords.x, y: coords.y, time: currentTime };
             lastVelocity = smoothedVelocity;
             lastWidth = ctx.lineWidth;
-            if (!hasSignature) {
-                hasSignature = true;
-                document.getElementById('signatureNext').disabled = false;
-            }
+            if (!hasSignature) { hasSignature = true; document.getElementById('signatureNext').disabled = false; }
         }
-
-        function stopDrawing() {
-            if (isDrawing) { isDrawing = false; lastPoint = null; }
-        }
-
+        function stopDrawing() { if (isDrawing) { isDrawing = false; lastPoint = null; } }
         function clearSignature() {
             if (ctx) {
                 const dpr = window.devicePixelRatio || 1;
@@ -801,7 +772,6 @@
                 document.getElementById('signatureNext').disabled = true;
             }
         }
-        
         function trimSignatureCanvas(c) {
             const ctx = c.getContext('2d');
             const copy = document.createElement('canvas').getContext('2d');
@@ -832,7 +802,6 @@
             copy.putImageData(trimmedData, 0, 0);
             return copy.canvas.toDataURL();
         }
-
         function setupColorPicker() {
             const colorBtns = document.querySelectorAll('.color-btn');
             colorBtns.forEach(btn => {
@@ -844,7 +813,6 @@
                 });
             });
         }
-
         function setupSizeControls() {
             signatureSize = signatureSizes[currentSizeIndex];
             document.getElementById('size-display').textContent = signatureSizeNames[currentSizeIndex];
@@ -852,22 +820,24 @@
         }
 
         function changeSignatureSize(direction) {
-            const newIndex = currentSizeIndex + direction;
+            if (activeSignatureId === null) return;
+            
+            const signaturesOnPage = signaturePositions[currentPage] || [];
+            const activeSign = signaturesOnPage.find(sig => sig.id === activeSignatureId);
+            if (!activeSign) return;
+
+            const currentIdx = signatureSizes.indexOf(activeSign.size);
+            const newIndex = currentIdx + direction;
+
             if (newIndex >= 0 && newIndex < signatureSizes.length) {
-                currentSizeIndex = newIndex;
-                signatureSize = signatureSizes[currentSizeIndex];
-                document.getElementById('size-display').textContent = signatureSizeNames[currentSizeIndex];
-                document.getElementById('size-display-mobile').textContent = signatureSizeNames[currentSizeIndex];
-                const preview = document.getElementById('signaturePreview');
-                if (preview && preview.style.display !== 'none' && preview.querySelector('img')) {
-                    preview.style.width = `${signatureSize}%`;
-                    const img = preview.querySelector('img');
-                    const aspectRatio = img.naturalHeight / img.naturalWidth || 0.6;
-                    preview.style.height = `${signatureSize * aspectRatio}%`;
-                }
+                activeSign.size = signatureSizes[newIndex];
+                renderSignaturesForPage();
+                
+                document.getElementById('size-display').textContent = signatureSizeNames[newIndex];
+                document.getElementById('size-display-mobile').textContent = signatureSizeNames[newIndex];
             }
         }
-
+        
         async function renderPdfPage() {
             if (!pdfDoc) return;
             try {
@@ -884,11 +854,12 @@
                 pdfCanvas.style.width = `${scaledViewport.width / 2}px`;
                 pdfCanvas.style.height = `${scaledViewport.height / 2}px`;
                 await page.render({ canvasContext: context, viewport: scaledViewport }).promise;
+                
                 updatePageNavigation();
-                showSignaturePreview();
+                renderSignaturesForPage();
                 showMultiPageControls();
                 updatePageStatus();
-                setTimeout(() => loadSignatureForCurrentPage(), 100);
+                
             } catch (error) {
                 console.error('Błąd renderowania strony PDF:', error);
                 alert('❌ Błąd podczas renderowania strony PDF: ' + error.message);
@@ -901,83 +872,72 @@
             document.getElementById('pageInfo').textContent = `Strona ${currentPage} z ${totalPages}`;
         }
 
-        function previousPage() { if (currentPage > 1) { currentPage--; renderPdfPage(); loadSignatureForCurrentPage(); } }
-        function nextPage() { if (currentPage < totalPages) { currentPage++; renderPdfPage(); loadSignatureForCurrentPage(); } }
+        function previousPage() { if (currentPage > 1) { currentPage--; activeSignatureId = null; renderPdfPage(); } }
+        function nextPage() { if (currentPage < totalPages) { currentPage++; activeSignatureId = null; renderPdfPage(); } }
+        
+        function renderSignaturesForPage() {
+            const container = document.getElementById('pdfContainer');
+            container.querySelectorAll('.signature-preview').forEach(el => el.remove());
 
-        function loadSignatureForCurrentPage() {
-            const preview = document.getElementById('signaturePreview');
-            if (!preview.querySelector('img')) return;
-            if (signaturePositions[currentPage]) {
-                const savedPosition = signaturePositions[currentPage];
-                preview.style.left = `${savedPosition.x}%`;
-                preview.style.top = `${savedPosition.y}%`;
-                if (savedPosition.size) {
-                    signatureSize = savedPosition.size;
-                    preview.style.width = `${savedPosition.size}%`;
-                    const aspectRatio = preview.querySelector('img').naturalHeight / preview.querySelector('img').naturalWidth;
-                    preview.style.height = `${savedPosition.size * aspectRatio}%`;
-                    const sizeIndex = signatureSizes.findIndex(size => size >= savedPosition.size);
-                    if (sizeIndex >= 0) {
-                        currentSizeIndex = sizeIndex;
-                        document.getElementById('size-display').textContent = signatureSizeNames[currentSizeIndex];
-                        document.getElementById('size-display-mobile').textContent = signatureSizeNames[currentSizeIndex];
-                    }
-                }
-                signaturePosition = { x: savedPosition.x, y: savedPosition.y, page: currentPage };
-            } else {
-                preview.style.left = '25%';
-                preview.style.top = '25%';
-                preview.style.width = `${signatureSize}%`;
-                const aspectRatio = preview.querySelector('img').naturalHeight / preview.querySelector('img').naturalWidth || 0.6;
-                preview.style.height = `${signatureSize * aspectRatio}%`;
-                signaturePosition = { x: 25, y: 25, page: currentPage };
-            }
-            updateSignatureButtons();
-            updateConfirmButton();
-        }
-
-        function showSignaturePreview() {
-            const preview = document.getElementById('signaturePreview');
+            const signaturesOnPage = signaturePositions[currentPage] || [];
             if (!signatureDataUrl) return;
-            preview.innerHTML = `<div class="signature-controls"><button class="signature-btn" onclick="saveSignaturePosition()" id="saveBtn-${currentPage}">💾 Zapisz</button><button class="signature-btn" onclick="removeSignatureFromPage()" id="removeBtn-${currentPage}" style="display: none; background: #ef4444;">🗑️ Usuń</button></div><img src="${signatureDataUrl}" style="width: 100%; height: 100%; object-fit: contain;" alt="Podpis"><div class="resize-handle">⤢</div>`;
-            const img = preview.querySelector('img');
-            img.onload = () => {
-                const aspectRatio = img.naturalHeight / img.naturalWidth || 0.6;
-                preview.style.width = `${signatureSize}%`;
-                preview.style.height = `${signatureSize * aspectRatio}%`;
-                preview.style.left = '25%';
-                preview.style.top = '25%';
-                preview.style.display = 'flex';
-                signaturePosition = { x: 25, y: 25, page: currentPage };
-            };
+
+            signaturesOnPage.forEach(sig => {
+                const preview = document.createElement('div');
+                preview.className = 'signature-preview';
+                preview.dataset.id = sig.id;
+                preview.style.left = `${sig.x}%`;
+                preview.style.top = `${sig.y}%`;
+                preview.style.width = `${sig.size}%`;
+
+                preview.innerHTML = `
+                    <div class="signature-controls">
+                        <button class="signature-btn" onclick="removeSignatureFromPage(${sig.id})">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        </button>
+                    </div>
+                    <img src="${signatureDataUrl}" style="width: 100%; height: 100%; object-fit: contain;" alt="Podpis">
+                    <div class="resize-handle"></div>`;
+                
+                container.appendChild(preview);
+
+                const img = preview.querySelector('img');
+                img.onload = () => {
+                    const aspectRatio = img.naturalHeight / img.naturalWidth || 0.6;
+                    preview.style.height = `${sig.size * aspectRatio}%`;
+                };
+
+                const setActive = () => {
+                    activeSignatureId = sig.id;
+                    document.querySelectorAll('.signature-preview').forEach(p => p.style.zIndex = '15');
+                    preview.style.zIndex = '16';
+                    const sizeIndex = signatureSizes.findIndex(s => s >= sig.size)
+                    document.getElementById('size-display').textContent = signatureSizeNames[sizeIndex] || 'Niestand.';
+                    document.getElementById('size-display-mobile').textContent = signatureSizeNames[sizeIndex] || 'Niestand.';
+                };
+                preview.addEventListener('mousedown', setActive);
+                preview.addEventListener('touchstart', setActive);
+                
+                makeDraggable(preview, sig.id);
+                makeResizable(preview, preview.querySelector('.resize-handle'), sig.id);
+            });
             updateConfirmButton();
-            makeDraggable(preview);
-            makeResizable(preview, preview.querySelector('.resize-handle'));
-            document.getElementById('pdfContainer').addEventListener('click', handlePdfClick);
-            updateSignatureButtons();
-            const saveBtn = document.getElementById(`saveBtn-${currentPage}`);
-            const removeBtn = document.getElementById(`removeBtn-${currentPage}`);
-            if (saveBtn) saveBtn.addEventListener('touchend', (e) => { e.preventDefault(); e.stopPropagation(); saveSignaturePosition(); }, { passive: false });
-            if (removeBtn) removeBtn.addEventListener('touchend', (e) => { e.preventDefault(); e.stopPropagation(); removeSignatureFromPage(); }, { passive: false });
         }
 
-        function handlePdfClick(e) {
-            if (e.target.id === 'pdfCanvas' || e.target.parentElement.id === 'pdfContainer') {
-                const preview = document.getElementById('signaturePreview');
-                const containerRect = document.getElementById('pdfContainer').getBoundingClientRect();
-                const previewWidth = preview.offsetWidth;
-                const previewHeight = preview.offsetHeight;
-                let x = e.clientX - containerRect.left - (previewWidth / 2);
-                let y = e.clientY - containerRect.top - (previewHeight / 2);
-                let xPercent = (x / containerRect.width) * 100;
-                let yPercent = (y / containerRect.height) * 100;
-                xPercent = Math.max(0, Math.min(xPercent, 100 - (previewWidth / containerRect.width * 100)));
-                yPercent = Math.max(0, Math.min(yPercent, 100 - (previewHeight / containerRect.height * 100)));
-                preview.style.left = `${xPercent}%`;
-                preview.style.top = `${yPercent}%`;
-                signaturePosition.x = xPercent;
-                signaturePosition.y = yPercent;
+        function addAnotherSignature() {
+            if (!signaturePositions[currentPage]) {
+                signaturePositions[currentPage] = [];
             }
+            const newId = nextSignatureId++;
+            signaturePositions[currentPage].push({
+                id: newId,
+                x: 10 + (signaturePositions[currentPage].length * 2),
+                y: 10 + (signaturePositions[currentPage].length * 2),
+                size: signatureSize
+            });
+            activeSignatureId = newId;
+            renderSignaturesForPage();
+            updatePageStatus();
         }
 
         function showMultiPageControls() {
@@ -986,81 +946,35 @@
                 document.getElementById('multiPageControls-mobile').style.display = 'block';
             }
         }
-
-        function saveSignaturePosition() {
-            if (!signaturePosition) { alert('Najpierw umieść podpis na stronie!'); return; }
-            signaturePositions[currentPage] = { x: signaturePosition.x, y: signaturePosition.y, page: currentPage, size: signatureSize };
-            signedPages.add(currentPage);
-            acceptedPosition = { x: signaturePosition.x, y: signaturePosition.y, size: signatureSize };
+        
+        function removeSignatureFromPage(signatureId) {
+            if (!signaturePositions[currentPage]) return;
+            signaturePositions[currentPage] = signaturePositions[currentPage].filter(sig => sig.id !== signatureId);
+            if (activeSignatureId === signatureId) activeSignatureId = null;
+            renderSignaturesForPage();
             updatePageStatus();
-            updateSignatureButtons();
-            updateConfirmButton();
-            if (totalPages > 1) {
-                const applyBtn = document.getElementById('applyAllBtn');
-                const applyBtnMobile = document.getElementById('applyAllBtn-mobile');
-                applyBtn.style.display = 'inline-block';
-                applyBtnMobile.style.display = 'inline-block';
-                if (!applyBtn.hasAttribute('data-mobile-ready')) {
-                    applyBtn.addEventListener('touchend', (e) => { e.preventDefault(); e.stopPropagation(); applyToAllPages(); }, { passive: false });
-                    applyBtnMobile.addEventListener('touchend', (e) => { e.preventDefault(); e.stopPropagation(); applyToAllPages(); }, { passive: false });
-                    applyBtn.setAttribute('data-mobile-ready', 'true');
-                }
-            }
-            alert('✅ Pozycja podpisu została zapisana dla tej strony!');
-        }
-
-        function updateSignatureButtons() {
-            const saveBtn = document.getElementById(`saveBtn-${currentPage}`);
-            const removeBtn = document.getElementById(`removeBtn-${currentPage}`);
-            if (signedPages.has(currentPage)) {
-                if (saveBtn) { saveBtn.textContent = '✅ Zapisano'; saveBtn.classList.add('applied'); saveBtn.onclick = null; }
-                if (removeBtn) removeBtn.style.display = 'inline-block';
-            } else {
-                 if (saveBtn) { saveBtn.textContent = '💾 Zapisz'; saveBtn.classList.remove('applied'); saveBtn.onclick = saveSignaturePosition; }
-                if (removeBtn) removeBtn.style.display = 'none';
-            }
-        }
-
-        function removeSignatureFromPage() {
-            if (!signedPages.has(currentPage)) { alert('Ta strona nie ma zapisanego podpisu!'); return; }
-            delete signaturePositions[currentPage];
-            signedPages.delete(currentPage);
-            updatePageStatus();
-            updateSignatureButtons();
-            updateConfirmButton();
-            alert('🗑️ Podpis został usunięty z tej strony!');
         }
 
         function updatePageStatus() {
             const statusContainers = [document.getElementById('pageStatus'), document.getElementById('pageStatus-mobile')];
             statusContainers.forEach(container => {
-                if(container) {
+                if (container) {
                     container.innerHTML = '';
                     for (let i = 1; i <= totalPages; i++) {
                         const indicator = document.createElement('div');
                         indicator.className = 'page-indicator';
                         indicator.textContent = i;
                         if (i === currentPage) indicator.classList.add('current');
-                        if (signedPages.has(i)) indicator.classList.add('signed');
+                        if (signaturePositions[i] && signaturePositions[i].length > 0) {
+                            indicator.classList.add('signed');
+                        }
                         container.appendChild(indicator);
                     }
                 }
             });
         }
-
-        function applyToAllPages() {
-            if (!acceptedPosition) { alert('Najpierw zapisz pozycję podpisu na jakiejś stronie!'); return; }
-            for (let i = 1; i <= totalPages; i++) {
-                signaturePositions[i] = { x: acceptedPosition.x, y: acceptedPosition.y, page: i, size: acceptedPosition.size };
-                signedPages.add(i);
-            }
-            updatePageStatus();
-            updateSignatureButtons();
-            updateConfirmButton();
-            alert(`✅ Podpis został dodany do wszystkich ${totalPages} stron!`);
-        }
-
-        function makeDraggable(element) {
+        
+        function makeDraggable(element, signatureId) {
             let isDragging = false, startX, startY, startLeft, startTop;
             const handleStart = (e) => {
                 if (e.target.classList.contains('resize-handle')) return;
@@ -1068,7 +982,6 @@
                 const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
                 const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
                 startX = clientX; startY = clientY; startLeft = element.offsetLeft; startTop = element.offsetTop;
-                element.style.opacity = '0.8'; element.style.transform = 'scale(1.05)'; element.style.zIndex = '20';
             };
             const handleMove = (e) => {
                 if (!isDragging) return; e.preventDefault();
@@ -1079,16 +992,18 @@
                 let newLeft = startLeft + deltaX; let newTop = startTop + deltaY;
                 newLeft = Math.max(0, Math.min(newLeft, parentRect.width - element.offsetWidth));
                 newTop = Math.max(0, Math.min(newTop, parentRect.height - element.offsetHeight));
-                element.style.left = `${newLeft / parentRect.width * 100}%`;
-                element.style.top = `${newTop / parentRect.height * 100}%`;
+                element.style.left = `${newLeft}px`;
+                element.style.top = `${newTop}px`;
             };
             const handleEnd = () => {
                 if (isDragging) {
-                    isDragging = false; element.style.opacity = '1'; element.style.transform = 'scale(1)'; element.style.zIndex = '15';
+                    isDragging = false;
                     const parentRect = element.parentElement.getBoundingClientRect();
-                    signaturePosition.x = (element.offsetLeft / parentRect.width) * 100;
-                    signaturePosition.y = (element.offsetTop / parentRect.height) * 100;
-                    signaturePosition.page = currentPage;
+                    const sig = signaturePositions[currentPage].find(s => s.id === signatureId);
+                    if (sig) {
+                        sig.x = (element.offsetLeft / parentRect.width) * 100;
+                        sig.y = (element.offsetTop / parentRect.height) * 100;
+                    }
                 }
             };
             element.addEventListener('mousedown', handleStart);
@@ -1099,13 +1014,13 @@
             document.addEventListener('touchend', handleEnd);
         }
 
-        function makeResizable(element, handle) {
+        function makeResizable(element, handle, signatureId) {
             let isResizing = false, startX, startWidth;
             const handleStart = (e) => {
                 e.preventDefault(); e.stopPropagation(); isResizing = true;
                 startX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
                 startWidth = element.offsetWidth;
-                handle.style.background = '#ef4444'; handle.style.transform = 'scale(1.2)';
+                handle.style.background = '#ef4444';
             };
             const handleMove = (e) => {
                 if (!isResizing) return; e.preventDefault();
@@ -1119,21 +1034,16 @@
                     const img = element.querySelector('img');
                     const aspectRatio = img.naturalHeight / img.naturalWidth || 0.6;
                     element.style.height = `${newWidthPercent * aspectRatio}%`;
-                    const closestSize = signatureSizes.reduce((p, c) => Math.abs(c - newWidthPercent) < Math.abs(p - newWidthPercent) ? c : p);
-                    const sizeIndex = signatureSizes.indexOf(closestSize);
-                    if (sizeIndex !== -1) {
-                         currentSizeIndex = sizeIndex;
-                         document.getElementById('size-display').textContent = signatureSizeNames[sizeIndex];
-                         document.getElementById('size-display-mobile').textContent = signatureSizeNames[sizeIndex];
-                    }
                 }
             };
             const handleEnd = () => {
                 if (isResizing) {
-                    isResizing = false; handle.style.background = '#3b82f6'; handle.style.transform = 'scale(1)';
+                    isResizing = false; handle.style.background = '#3b82f6';
                     const parentRect = element.parentElement.getBoundingClientRect();
-                    signatureSize = (element.offsetWidth / parentRect.width) * 100;
-                    if (signaturePosition) signaturePosition.size = signatureSize;
+                    const sig = signaturePositions[currentPage].find(s => s.id === signatureId);
+                    if (sig) {
+                        sig.size = (element.offsetWidth / parentRect.width) * 100;
+                    }
                 }
             };
             handle.addEventListener('mousedown', handleStart);
@@ -1143,7 +1053,7 @@
             document.addEventListener('mouseup', handleEnd);
             document.addEventListener('touchend', handleEnd);
         }
-
+        
         function nextStep() {
             if (currentStep < 4) {
                 document.getElementById(`content-${currentStep}`).classList.remove('active');
@@ -1152,11 +1062,19 @@
                 currentStep++;
                 document.getElementById(`content-${currentStep}`).classList.add('active');
                 document.getElementById(`step-${currentStep}`).classList.add('active');
+                
                 if (currentStep === 2) setupSignatureCanvas();
-                else if (currentStep === 3) { signatureDataUrl = trimSignatureCanvas(canvas); renderPdfPage(); } 
+                else if (currentStep === 3) { 
+                    signatureDataUrl = trimSignatureCanvas(canvas);
+                    renderPdfPage();
+                    if (!signaturePositions[currentPage] || signaturePositions[currentPage].length === 0) {
+                        addAnotherSignature();
+                    }
+                } 
                 else if (currentStep === 4) {
-                    if (signedPages.size === 0) {
-                        alert('❌ Najpierw zapisz podpis na przynajmniej jednej stronie!');
+                    let hasAnySignature = Object.values(signaturePositions).some(arr => arr.length > 0);
+                    if (!hasAnySignature) {
+                        alert('❌ Najpierw dodaj i umieść przynajmniej jeden podpis!');
                         currentStep--;
                         document.getElementById(`content-${currentStep + 1}`).classList.remove('active');
                         document.getElementById(`step-${currentStep + 1}`).classList.remove('active');
@@ -1171,7 +1089,7 @@
                 }
             }
         }
-
+        
         function previousStep() {
             if (currentStep > 1) {
                 document.getElementById(`content-${currentStep}`).classList.remove('active');
@@ -1182,7 +1100,7 @@
                 document.getElementById(`step-${currentStep}`).classList.add('active');
             }
         }
-        
+
         function dataURLToArrayBuffer(dataUrl) {
             const base64 = dataUrl.split(',')[1];
             const binaryString = atob(base64);
@@ -1193,7 +1111,7 @@
 
         async function generateSignedPdf() {
             try {
-                if (!signatureDataUrl) throw new Error('Brak danych podpisu. Narysuj podpis ponownie.');
+                if (!signatureDataUrl) throw new Error('Brak danych podpisu.');
                 const finalPdfDoc = await PDFLib.PDFDocument.create();
                 const signatureImage = await finalPdfDoc.embedPng(signatureDataUrl);
                 for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
@@ -1208,18 +1126,16 @@
                     const { width, height } = pageImage.scale(1);
                     const pdfPage = finalPdfDoc.addPage([width, height]);
                     pdfPage.drawImage(pageImage, { x: 0, y: 0, width: width, height: height });
-                    if (signedPages.has(pageNum)) {
-                        const position = signaturePositions[pageNum];
-                        if (position) {
-                            const signatureDims = signatureImage.scale(1);
-                            const signatureWidth = ((position.size / 100) * width) * 1.15;
-                            const signatureHeight = (signatureWidth / signatureDims.width) * signatureDims.height;
-                            const x = (position.x / 100) * width;
-                            const y = height - (position.y / 100) * height - signatureHeight - 20;
-                            
-                            pdfPage.drawImage(signatureImage, { x, y, width: signatureWidth, height: signatureHeight });
-                        }
-                    }
+
+                    const signaturesOnPage = signaturePositions[pageNum] || [];
+                    signaturesOnPage.forEach(position => {
+                        const signatureDims = signatureImage.scale(1);
+                        const signatureWidth = ((position.size / 100) * width) * 1.15;
+                        const signatureHeight = (signatureWidth / signatureDims.width) * signatureDims.height;
+                        const x = (position.x / 100) * width;
+                        const y = height - (position.y / 100) * height - signatureHeight - 20;
+                        pdfPage.drawImage(signatureImage, { x, y, width: signatureWidth, height: signatureHeight });
+                    });
                 }
                 const pdfBytes = await finalPdfDoc.save();
                 const originalName = pdfFile.name.replace(/\.pdf$/i, '');
@@ -1260,20 +1176,32 @@
         
         function sendEmail() {
             const fileName = window.signedPdfName || (pdfFile ? pdfFile.name.replace('.pdf', '_podpisany.pdf') : 'podpisany.pdf');
-            const subject = encodeURIComponent('Podpisany dokument PDF');
-            const body = encodeURIComponent(`Załączam podpisany dokument: ${fileName}\n\nDokument został podpisany za pomocą aplikacji PDF Signer.`);
+            const subject = encodeURIComponent(`Podpisany dokument: ${fileName}`);
+            const body = encodeURIComponent('Dzień dobry,\n\nw załączniku przesyłam podpisany dokument.\n\nPozdrawiam');
+            const mailtoLink = `mailto:?subject=${subject}&body=${body}`;
+            window.location.href = mailtoLink;
+        }
+
+        async function sendWhatsApp() {
+            const fileName = window.signedPdfName || (pdfFile ? pdfFile.name.replace('.pdf', '_podpisany.pdf') : 'podpisany.pdf');
+            const text = `Przesyłam podpisany dokument: ${fileName}`;
+            const shareData = { title: 'Podpisany dokument PDF', text: text };
             if (navigator.share && window.signedPdfBlob) {
-                navigator.share({
-                    title: 'Podpisany dokument PDF',
-                    text: 'Przesyłam podpisany dokument PDF',
-                    files: [new File([window.signedPdfBlob], fileName, { type: 'application/pdf' })]
-                }).catch( (error) => {
-                    console.warn("Udostępnianie przez Web Share API nie powiodło się, powrót do mailto:", error);
-                    window.location.href = `mailto:?subject=${subject}&body=${body}`;
-                });
-            } else {
-                 window.location.href = `mailto:?subject=${subject}&body=${body}`;
+                const fileToShare = new File([window.signedPdfBlob], fileName, { type: 'application/pdf' });
+                if (navigator.canShare && navigator.canShare({ files: [fileToShare] })) {
+                    shareData.files = [fileToShare];
+                }
             }
+            if (navigator.share) {
+                try {
+                    await navigator.share(shareData);
+                    return; 
+                } catch (error) {
+                    console.warn("Udostępnianie przez Web Share API nie powiodło się, powrót do linku WhatsApp.", error);
+                }
+            }
+            const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text + "\n\n(Pobierz dokument i załącz go do tej rozmowy ręcznie)")}`;
+            window.open(whatsappUrl, '_blank');
         }
         
         function signAnother() { window.location.reload(); }
@@ -1281,7 +1209,8 @@
         function updateConfirmButton() {
             const confirmBtn = document.getElementById('placementNext');
             if (confirmBtn) {
-                confirmBtn.disabled = signedPages.size === 0;
+                let hasAnySignature = Object.values(signaturePositions).some(arr => arr.length > 0);
+                confirmBtn.disabled = !hasAnySignature;
                 if (!confirmBtn.hasAttribute('data-mobile-ready')) {
                     confirmBtn.addEventListener('touchend', (e) => {
                         if (!confirmBtn.disabled) { e.preventDefault(); e.stopPropagation(); nextStep(); }
