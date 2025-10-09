@@ -479,7 +479,7 @@
                                 <button class="size-btn" onclick="changeSignatureSize(1)">+</button>
                             </div>
                             <hr>
-                            <div class="multi-page-controls" id="multiPageControls" style="display: none; border: none; padding: 0; margin: 0;">
+                            <div class="multi-page-controls" id="multiPageControls" style="border: none; padding: 0; margin: 0;">
                                 <strong>Status stron</strong>
                                 <div class="page-status" id="pageStatus"></div>
                                 <div class="d-grid gap-2 mt-3">
@@ -498,7 +498,7 @@
                         <div class="size-display" id="size-display-mobile">Średni</div>
                         <button class="size-btn" onclick="changeSignatureSize(1)">+</button>
                     </div>
-                    <div class="multi-page-controls" id="multiPageControls-mobile" style="display: none;">
+                    <div class="multi-page-controls" id="multiPageControls-mobile">
                         <h5>📄 Status stron</h5>
                         <div class="page-status" id="pageStatus-mobile"></div>
                         <div class="d-flex gap-2 mt-3">
@@ -586,12 +586,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // ... (Cały kod JS do tego momentu bez zmian) ...
-        // ...
-        // Tu jest cały niezmieniony kod JavaScript
-        // ...
-        // ... (JEDYNA ZMIANA ZNAJDUJE SIĘ W JEDNEJ FUNKCJI PONIŻEJ)
-        // ...
-
+        
         let currentStep = 1;
         let pdfFile = null;
         let pdfDoc = null;
@@ -845,7 +840,6 @@
                 pdfCanvas.height = scaledViewport.height;
                 pdfCanvas.style.width = `${scaledViewport.width / 2}px`;
                 pdfCanvas.style.height = `${scaledViewport.height / 2}px`;
-                // ✅ POPRAWKA BŁĘDU: Użyto `context` i `scaledViewport`
                 await page.render({ canvasContext: context, viewport: scaledViewport }).promise;
                 updatePageNavigation();
                 renderSignaturesForPage();
@@ -878,15 +872,27 @@
                 preview.style.left = `${sig.x}%`;
                 preview.style.top = `${sig.y}%`;
                 preview.style.width = `${sig.size}%`;
-                preview.innerHTML = `
-                    <div class="signature-controls">
-                        <button class="signature-btn" onclick="removeSignatureFromPage(${sig.id})">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                        </button>
-                    </div>
-                    <img src="${signatureDataUrl}" style="width: 100%; height: 100%; object-fit: contain;" alt="Podpis">
-                    <div class="resize-handle"></div>`;
+                
+                const removeButton = document.createElement('button');
+                removeButton.className = 'signature-btn';
+                removeButton.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+                
+                const removeAction = (e) => {
+                    e.stopPropagation();
+                    removeSignatureFromPage(sig.id);
+                };
+                removeButton.addEventListener('click', removeAction);
+                removeButton.addEventListener('touchstart', removeAction);
+
+                const controls = document.createElement('div');
+                controls.className = 'signature-controls';
+                controls.appendChild(removeButton);
+
+                preview.innerHTML = `<img src="${signatureDataUrl}" style="width: 100%; height: 100%; object-fit: contain;" alt="Podpis"><div class="resize-handle"></div>`;
+                preview.prepend(controls);
+                
                 container.appendChild(preview);
+
                 const img = preview.querySelector('img');
                 img.onload = () => {
                     const aspectRatio = img.naturalHeight / img.naturalWidth || 0.6;
@@ -960,7 +966,7 @@
         function makeDraggable(element, signatureId) {
             let isDragging = false, startX, startY, startLeft, startTop;
             const handleStart = (e) => {
-                if (e.target.classList.contains('resize-handle')) return;
+                if (e.target.classList.contains('resize-handle') || e.target.closest('.signature-btn')) return;
                 e.preventDefault(); e.stopPropagation(); isDragging = true;
                 const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
                 const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
@@ -982,7 +988,7 @@
                 if (isDragging) {
                     isDragging = false;
                     const parentRect = element.parentElement.getBoundingClientRect();
-                    const sig = signaturePositions[currentPage].find(s => s.id === signatureId);
+                    const sig = (signaturePositions[currentPage] || []).find(s => s.id === signatureId);
                     if (sig) {
                         sig.x = (element.offsetLeft / parentRect.width) * 100;
                         sig.y = (element.offsetTop / parentRect.height) * 100;
@@ -1023,7 +1029,7 @@
                 if (isResizing) {
                     isResizing = false; handle.style.background = '#3b82f6';
                     const parentRect = element.parentElement.getBoundingClientRect();
-                    const sig = signaturePositions[currentPage].find(s => s.id === signatureId);
+                    const sig = (signaturePositions[currentPage] || []).find(s => s.id === signatureId);
                     if (sig) {
                         sig.size = (element.offsetWidth / parentRect.width) * 100;
                     }
@@ -1116,7 +1122,7 @@
                         const signatureWidth = ((position.size / 100) * width) * 1.15;
                         const signatureHeight = (signatureWidth / signatureDims.width) * signatureDims.height;
                         const x = (position.x / 100) * width;
-                        const y = height - (position.y / 100) * height - signatureHeight - 20;
+                        const y = height - (position.y / 100) * height - signatureHeight - 35;
                         pdfPage.drawImage(signatureImage, { x, y, width: signatureWidth, height: signatureHeight });
                     });
                 }
