@@ -643,7 +643,7 @@
                 const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
                 pdfDoc = await loadingTask.promise;
                 totalPages = pdfDoc.numPages;
-                currentPage = totalPages;
+                currentPage = totalPages > 1 ? totalPages - 1 : 1; // JEDYNA ZMIANA
             } catch (error) {
                 if (error.name === 'PasswordException') {
                     isPasswordProtected = true;
@@ -659,7 +659,7 @@
                 const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer, password: password });
                 pdfDoc = await loadingTask.promise;
                 totalPages = pdfDoc.numPages;
-                currentPage = totalPages;
+                currentPage = totalPages > 1 ? totalPages - 1 : 1; // JEDYNA ZMIANA
             } catch (error) {
                 if (error.name === 'PasswordException') throw new Error('Błędne hasło');
                 throw error;
@@ -829,7 +829,7 @@
                 const container = document.getElementById('pdfContainer');
                 const containerWidth = container.offsetWidth;
 
-                const qualityFactor = 3; // Zwiększono jakość do 3x
+                const qualityFactor = 3; 
                 const viewport = page.getViewport({ scale: 1 });
                 const scale = containerWidth / viewport.width;
                 const scaledViewport = page.getViewport({ scale: scale * qualityFactor });
