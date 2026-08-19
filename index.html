@@ -1529,46 +1529,43 @@
             });
         }
 
-        function getPdfPageBounds() {
-            const pdfCanvas = document.getElementById('pdfCanvas');
-            return { width: pdfCanvas.offsetWidth, height: pdfCanvas.offsetHeight };
+        function getPointerPosition(e) {
+            const point = (e.type === 'touchstart' || e.type === 'touchmove') ? e.touches[0] : e;
+            return { x: point.clientX, y: point.clientY };
         }
 
         function makeDraggable(element, signatureId) {
-            let isDragging = false, startX, startY, startLeft, startTop;
+            let isDragging = false, grabOffsetXPercent = 0, grabOffsetYPercent = 0;
             const handleStart = (e) => {
                 if (e.target.closest('.signature-btn') || e.target.classList.contains('resize-handle')) {
                     return;
                 }
                 e.preventDefault();
                 isDragging = true;
-                const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
-                const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
-                startX = clientX; startY = clientY; startLeft = element.offsetLeft; startTop = element.offsetTop;
+                const point = getPointerPosition(e);
+                const canvasRect = document.getElementById('pdfCanvas').getBoundingClientRect();
+                const sig = signaturePositions[currentPage].find(s => s.id === signatureId);
+                const pointXPercent = ((point.x - canvasRect.left) / canvasRect.width) * 100;
+                const pointYPercent = ((point.y - canvasRect.top) / canvasRect.height) * 100;
+                grabOffsetXPercent = pointXPercent - (sig ? sig.x : 0);
+                grabOffsetYPercent = pointYPercent - (sig ? sig.y : 0);
             };
             const handleMove = (e) => {
                 if (!isDragging) return; e.preventDefault();
-                const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
-                const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
-                const deltaX = clientX - startX; const deltaY = clientY - startY;
-                const pageRect = getPdfPageBounds();
-                let newLeft = startLeft + deltaX; let newTop = startTop + deltaY;
-                newLeft = Math.max(0, Math.min(newLeft, pageRect.width - element.offsetWidth));
-                newTop = Math.max(0, Math.min(newTop, pageRect.height - element.offsetHeight));
-                element.style.left = `${newLeft}px`;
-                element.style.top = `${newTop}px`;
+                const point = getPointerPosition(e);
+                const canvasRect = document.getElementById('pdfCanvas').getBoundingClientRect();
+                const widthPercent = (element.offsetWidth / canvasRect.width) * 100;
+                const heightPercent = (element.offsetHeight / canvasRect.height) * 100;
+                let newXPercent = ((point.x - canvasRect.left) / canvasRect.width) * 100 - grabOffsetXPercent;
+                let newYPercent = ((point.y - canvasRect.top) / canvasRect.height) * 100 - grabOffsetYPercent;
+                newXPercent = Math.max(0, Math.min(newXPercent, 100 - widthPercent));
+                newYPercent = Math.max(0, Math.min(newYPercent, 100 - heightPercent));
+                element.style.left = `${newXPercent}%`;
+                element.style.top = `${newYPercent}%`;
+                const sig = signaturePositions[currentPage].find(s => s.id === signatureId);
+                if (sig) { sig.x = newXPercent; sig.y = newYPercent; }
             };
-            const handleEnd = () => {
-                if (isDragging) {
-                    isDragging = false;
-                    const pageRect = getPdfPageBounds();
-                    const sig = signaturePositions[currentPage].find(s => s.id === signatureId);
-                    if (sig) {
-                        sig.x = (element.offsetLeft / pageRect.width) * 100;
-                        sig.y = (element.offsetTop / pageRect.height) * 100;
-                    }
-                }
-            };
+            const handleEnd = () => { isDragging = false; };
             element.addEventListener('mousedown', handleStart);
             element.addEventListener('touchstart', handleStart, { passive: false });
             document.addEventListener('mousemove', handleMove);
@@ -1578,36 +1575,30 @@
         }
 
         function makeResizable(element, handle, signatureId) {
-            let isResizing = false, startX, startWidth;
+            let isResizing = false, elementLeftPercent = 0;
             const handleStart = (e) => {
                 e.preventDefault(); e.stopPropagation(); isResizing = true;
-                startX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
-                startWidth = element.offsetWidth;
+                const sig = signaturePositions[currentPage].find(s => s.id === signatureId);
+                elementLeftPercent = sig ? sig.x : 0;
                 handle.style.background = '#ef4444';
             };
             const handleMove = (e) => {
                 if (!isResizing) return; e.preventDefault();
-                const currentX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
-                const deltaX = currentX - startX;
-                const pageRect = getPdfPageBounds();
-                const newWidth = startWidth + deltaX;
-                const newWidthPercent = (newWidth / pageRect.width) * 100;
+                const point = getPointerPosition(e);
+                const canvasRect = document.getElementById('pdfCanvas').getBoundingClientRect();
+                const pointXPercent = ((point.x - canvasRect.left) / canvasRect.width) * 100;
+                const newWidthPercent = pointXPercent - elementLeftPercent;
                 if (newWidthPercent > 5 && newWidthPercent < 95 && element.querySelector('img')) {
                     element.style.width = `${newWidthPercent}%`;
                     const img = element.querySelector('img');
                     const aspectRatio = img.naturalHeight / img.naturalWidth || 0.6;
                     element.style.height = `${newWidthPercent * aspectRatio}%`;
+                    const sig = signaturePositions[currentPage].find(s => s.id === signatureId);
+                    if (sig) sig.size = newWidthPercent;
                 }
             };
             const handleEnd = () => {
-                if (isResizing) {
-                    isResizing = false; handle.style.background = '#3b82f6';
-                    const pageRect = getPdfPageBounds();
-                    const sig = signaturePositions[currentPage].find(s => s.id === signatureId);
-                    if (sig) {
-                        sig.size = (element.offsetWidth / pageRect.width) * 100;
-                    }
-                }
+                if (isResizing) { isResizing = false; handle.style.background = '#3b82f6'; }
             };
             handle.addEventListener('mousedown', handleStart);
             handle.addEventListener('touchstart', handleStart, { passive: false });
