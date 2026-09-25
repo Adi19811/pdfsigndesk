@@ -1041,7 +1041,7 @@
                             <strong>Rozmiar</strong>
                             <div class="size-controls">
                                 <button class="size-btn" onclick="changeSignatureSize(-1)">-</button>
-                                <div class="size-display" id="size-display">Duży</div>
+                                <div class="size-display" id="size-display">Ogromny</div>
                                 <button class="size-btn" onclick="changeSignatureSize(1)">+</button>
                             </div>
                             <hr>
@@ -1061,7 +1061,7 @@
                 <div class="mobile-controls">
                     <div class="size-controls">
                         <button class="size-btn" onclick="changeSignatureSize(-1)">-</button>
-                        <div class="size-display" id="size-display-mobile">Duży</div>
+                        <div class="size-display" id="size-display-mobile">Ogromny</div>
                         <button class="size-btn" onclick="changeSignatureSize(1)">+</button>
                     </div>
                     <div class="multi-page-controls" id="multiPageControls-mobile" style="display: none;">
@@ -1158,10 +1158,10 @@
         let signaturePositions = {};
         let nextSignatureId = 1;
         let activeSignatureId = null;
-        let signatureSize = 20;
+        let signatureSize = 30;
         let signatureSizes = [8, 12, 15, 20, 25, 30, 35];
         let signatureSizeNames = ['Bardzo mały', 'Mały', 'Średni', 'Duży', 'Bardzo duży', 'Ogromny', 'Maksymalny'];
-        let currentSizeIndex = 3;
+        let currentSizeIndex = 5;
         let currentPage = 1;
         let totalPages = 1;
         let isPasswordProtected = false;
