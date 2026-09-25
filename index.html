@@ -1486,10 +1486,12 @@
                 signaturePositions[currentPage] = [];
             }
             const newId = nextSignatureId++;
+            // Domyślna pozycja dopasowana do miejsca na podpis we wzorze umowy
+            // (lewa kolumna "Podpis", ok. 10% od lewej / 80% od góry strony)
             signaturePositions[currentPage].push({
                 id: newId,
                 x: 10 + (signaturePositions[currentPage].length * 2),
-                y: 10 + (signaturePositions[currentPage].length * 2),
+                y: 80 + (signaturePositions[currentPage].length * 2),
                 size: signatureSize
             });
             activeSignatureId = newId;
