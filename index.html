@@ -1491,7 +1491,7 @@
             signaturePositions[currentPage].push({
                 id: newId,
                 x: 10 + (signaturePositions[currentPage].length * 2),
-                y: 80 + (signaturePositions[currentPage].length * 2),
+                y: 82 + (signaturePositions[currentPage].length * 2),
                 size: signatureSize
             });
             activeSignatureId = newId;
@@ -1692,7 +1692,7 @@
                     const signaturesOnPage = signaturePositions[pageNum] || [];
                     signaturesOnPage.forEach(position => {
                         const signatureDims = signatureImage.scale(1);
-                        const signatureWidth = ((position.size / 100) * width) * 1.15;
+                        const signatureWidth = (position.size / 100) * width;
                         const signatureHeight = (signatureWidth / signatureDims.width) * signatureDims.height;
                         const x = (position.x / 100) * width;
                         const y = height - (position.y / 100) * height - signatureHeight;
